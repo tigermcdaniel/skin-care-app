@@ -45,22 +45,10 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left column - Atmospheric image placeholder */}
-          <div className="relative">
-            <div className="aspect-[4/5] bg-gradient-to-b from-sage-200 to-sage-400 rounded-sm overflow-hidden">
-              <img
-                src="/placeholder.svg?height=600&width=480"
-                alt="Serene skincare sanctuary"
-                className="w-full h-full object-cover opacity-80"
-              />
-            </div>
-          </div>
-
-          {/* Right column - Content */}
+        <div className="max-w-2xl mx-auto">
           <div className="space-y-12">
             <div>
-              <p className="text-charcoal-700 leading-relaxed mb-8 font-light">
+              <p className="text-charcoal-700 leading-relaxed mb-8 font-light text-center">
                 Our platform draws inspiration from the wisdom of professional aestheticians, combining time-honored
                 skincare principles with modern AI intelligence to create a deeply personal journey toward skin
                 wellness.
