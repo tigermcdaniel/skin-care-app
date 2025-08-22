@@ -1,9 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Home, Calendar, BarChart3, MessageCircle, Package, User, CalendarDays } from "lucide-react"
+import { Home, Calendar, BarChart3, MessageCircle, Package, User, CalendarDays, LogOut } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 const navigation = [
   { name: "Home", href: "/dashboard", icon: Home },
@@ -17,6 +18,13 @@ const navigation = [
 
 export function GlobalNavigation() {
   const pathname = usePathname()
+  const router = useRouter()
+  const supabase = createClient()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/auth/login")
+  }
 
   return (
     <nav className="bg-stone-50 border-b border-stone-200">
@@ -49,6 +57,15 @@ export function GlobalNavigation() {
                 </Link>
               )
             })}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="gap-2 text-stone-600 hover:text-red-600 hover:bg-red-50 ml-4"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
           </div>
 
           <div className="md:hidden">
