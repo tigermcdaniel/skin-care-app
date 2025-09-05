@@ -15,7 +15,7 @@ import {
 import { RoutineBuilder } from "@/components/routine-builder"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Plus, Edit, Eye, Trash2, Sun, Moon, Calendar, Clock } from "lucide-react"
+import { Plus, Edit, Sun, Moon, Calendar, Clock, MessageCircle, CheckCircle, Play } from "lucide-react"
 
 interface Product {
   id: string
@@ -136,43 +136,88 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
     setEditingRoutine(null)
   }
 
+  const markRoutineComplete = async (routineId: string, routineName: string) => {
+    setIsLoading(true)
+    const supabase = createClient()
+
+    try {
+      const today = new Date().toISOString().split("T")[0]
+
+      const routine = routines.find((r) => r.id === routineId)
+      const isEveningRoutine =
+        routine?.type?.toLowerCase().includes("evening") || routine?.name?.toLowerCase().includes("evening")
+
+      const { error } = await supabase.from("daily_checkins").insert({
+        user_id: userId,
+        date: today,
+        morning_routine_completed: isEveningRoutine ? null : true,
+        evening_routine_completed: isEveningRoutine ? true : null,
+        notes: `Completed ${routineName} routine`,
+      })
+
+      if (error) throw error
+
+      alert(`${routineName} routine marked as complete for today!`)
+      router.refresh()
+    } catch (error) {
+      console.error("Error marking routine complete:", error)
+      alert("Failed to mark routine as complete. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const askChatAboutRoutine = (routine: Routine) => {
+    const prompt = `Tell me about my ${routine.name} routine and suggest any improvements`
+    router.push(`/chat/new-session?prompt=${encodeURIComponent(prompt)}`)
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header with Create Button */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-serif text-charcoal-800">Your Rituals</h2>
-          <p className="text-charcoal-600">Curate your daily skincare ceremonies</p>
+          <h2 className="text-xl font-serif text-charcoal-800">Your Ritual Reference</h2>
+          <p className="text-charcoal-600">View your routines and take actions when ready</p>
         </div>
-        <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
-          <DialogTrigger asChild>
-            <Button
-              onClick={() => openBuilder()}
-              className="bg-sage-600 hover:bg-sage-700 text-white transition-all duration-300"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Ritual
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingRoutine ? "Edit Ritual" : "Create New Ritual"}</DialogTitle>
-              <DialogDescription>
-                {editingRoutine ? "Update your ritual steps and products" : "Build a personalized skincare ritual"}
-              </DialogDescription>
-            </DialogHeader>
-            <RoutineBuilder
-              routine={editingRoutine}
-              inventory={inventory}
-              userId={userId}
-              onClose={closeBuilder}
-              onSave={() => {
-                closeBuilder()
-                router.refresh()
-              }}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-3">
+          <Button
+            onClick={() => router.push("/chat/new-session?prompt=Help me create a new skincare routine")}
+            variant="outline"
+            className="border-sage-200 text-sage-700 hover:bg-sage-50"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Ask Chat to Build
+          </Button>
+          <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
+            <DialogTrigger asChild>
+              <Button
+                onClick={() => openBuilder()}
+                className="bg-sage-600 hover:bg-sage-700 text-white transition-all duration-300"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Ritual
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingRoutine ? "Edit Ritual" : "Create New Ritual"}</DialogTitle>
+                <DialogDescription>
+                  {editingRoutine ? "Update your ritual steps and products" : "Build a personalized skincare ritual"}
+                </DialogDescription>
+              </DialogHeader>
+              <RoutineBuilder
+                routine={editingRoutine}
+                inventory={inventory}
+                userId={userId}
+                onClose={closeBuilder}
+                onSave={() => {
+                  closeBuilder()
+                  router.refresh()
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Routines Grid */}
@@ -182,11 +227,24 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
             <Clock className="h-12 w-12 mx-auto" />
           </div>
           <h3 className="text-lg font-medium font-serif text-charcoal-800 mb-2">No rituals created yet</h3>
-          <p className="text-charcoal-600 mb-4">Begin your personalized skincare journey</p>
-          <Button onClick={() => openBuilder()} className="bg-sage-600 hover:bg-sage-700 text-white">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Your First Ritual
-          </Button>
+          <p className="text-charcoal-600 mb-4">Start by asking your advisor to build a routine</p>
+          <div className="flex gap-3 justify-center">
+            <Button
+              onClick={() => router.push("/chat/new-session?prompt=Help me create my first skincare routine")}
+              className="bg-sage-600 hover:bg-sage-700 text-white"
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Ask Chat to Build
+            </Button>
+            <Button
+              onClick={() => openBuilder()}
+              variant="outline"
+              className="border-sage-200 text-sage-700 hover:bg-sage-50"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Build Manually
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -239,47 +297,60 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push(`/routines/${routine.id}`)}
-                    className="flex-1 border-sage-200 text-sage-700 hover:bg-sage-50"
-                  >
-                    <Eye className="h-4 w-4 mr-2" />
-                    View
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openBuilder(routine)}
-                    className="border-stone-200 text-charcoal-600 hover:bg-stone-50"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleRoutineActive(routine.id, routine.is_active)}
-                    disabled={isLoading}
-                    className={
-                      routine.is_active
-                        ? "text-rose-600 border-rose-200 hover:bg-rose-50"
-                        : "text-sage-600 border-sage-200 hover:bg-sage-50"
-                    }
-                  >
-                    {routine.is_active ? "Pause" : "Activate"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => deleteRoutine(routine.id)}
-                    disabled={isLoading}
-                    className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                <div className="space-y-3">
+                  {/* Primary Actions */}
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => markRoutineComplete(routine.id, routine.name)}
+                      disabled={isLoading}
+                      className="flex-1 bg-sage-600 hover:bg-sage-700 text-white"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Mark Complete
+                    </Button>
+                    <Button
+                      onClick={() => router.push(`/routines/${routine.id}`)}
+                      variant="outline"
+                      className="flex-1 border-sage-200 text-sage-700 hover:bg-sage-50"
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Start Routine
+                    </Button>
+                  </div>
+
+                  {/* Secondary Actions */}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => askChatAboutRoutine(routine)}
+                      className="flex-1 border-stone-200 text-charcoal-600 hover:bg-stone-50"
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Ask Chat
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openBuilder(routine)}
+                      className="border-stone-200 text-charcoal-600 hover:bg-stone-50"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleRoutineActive(routine.id, routine.is_active)}
+                      disabled={isLoading}
+                      className={
+                        routine.is_active
+                          ? "text-rose-600 border-rose-200 hover:bg-rose-50"
+                          : "text-sage-600 border-sage-200 hover:bg-sage-50"
+                      }
+                    >
+                      {routine.is_active ? "Pause" : "Activate"}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

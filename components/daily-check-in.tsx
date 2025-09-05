@@ -5,14 +5,11 @@ import type React from "react"
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Slider } from "@/components/ui/slider"
-import { Checkbox } from "@/components/ui/checkbox"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Camera } from "lucide-react"
+import { Camera, X, Sparkles } from "lucide-react"
 
 interface DailyCheckin {
   id: string
@@ -36,53 +33,86 @@ interface DailyCheckInProps {
 
 export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [photoFiles, setPhotoFiles] = useState<File[]>([])
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const router = useRouter()
 
-  // Form state
-  const [morningCompleted, setMorningCompleted] = useState(existingCheckin?.morning_routine_completed || false)
-  const [eveningCompleted, setEveningCompleted] = useState(existingCheckin?.evening_routine_completed || false)
-  const [skinRating, setSkinRating] = useState([existingCheckin?.skin_condition_rating || 5])
-  const [moodRating, setMoodRating] = useState([existingCheckin?.mood_rating || 3])
-  const [sleepHours, setSleepHours] = useState(existingCheckin?.sleep_hours?.toString() || "")
-  const [waterIntake, setWaterIntake] = useState(existingCheckin?.water_intake?.toString() || "")
-  const [stressLevel, setStressLevel] = useState([existingCheckin?.stress_level || 3])
-  const [notes, setNotes] = useState(existingCheckin?.notes || "")
   const [photoNotes, setPhotoNotes] = useState("")
   const [lightingConditions, setLightingConditions] = useState("natural")
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setPhotoFile(file)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setPhotoPreview(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+    const files = Array.from(e.target.files || [])
+    if (files.length > 0) {
+      setPhotoFiles((prev) => [...prev, ...files])
+
+      files.forEach((file) => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setPhotoPreviews((prev) => [...prev, e.target?.result as string])
+        }
+        reader.readAsDataURL(file)
+      })
     }
   }
 
-  const uploadPhoto = async (): Promise<string | null> => {
-    if (!photoFile) return null
+  const removePhoto = (index: number) => {
+    setPhotoFiles((prev) => prev.filter((_, i) => i !== index))
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index))
+  }
 
-    const formData = new FormData()
-    formData.append("file", photoFile)
+  const uploadPhotos = async (): Promise<string[]> => {
+    if (photoFiles.length === 0) return []
 
+    const uploadPromises = photoFiles.map(async (file) => {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      try {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        })
+
+        if (!response.ok) throw new Error("Upload failed")
+
+        const data = await response.json()
+        return data.url
+      } catch (error) {
+        console.error("Error uploading photo:", error)
+        return null
+      }
+    })
+
+    const results = await Promise.all(uploadPromises)
+    return results.filter((url) => url !== null)
+  }
+
+  const analyzePhotosAndSuggestRoutine = async (photoUrls: string[]) => {
+    setIsAnalyzing(true)
     try {
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/analyze-photos", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          photoUrls,
+          userId,
+          notes: photoNotes,
+          lightingConditions,
+        }),
       })
 
-      if (!response.ok) throw new Error("Upload failed")
+      if (!response.ok) throw new Error("Analysis failed")
 
-      const data = await response.json()
-      return data.url
+      const analysis = await response.json()
+      return analysis
     } catch (error) {
-      console.error("Error uploading photo:", error)
+      console.error("Error analyzing photos:", error)
       return null
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
@@ -93,18 +123,17 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
     try {
       const today = new Date().toISOString().split("T")[0]
 
-      // Save daily check-in
       const checkinData = {
         user_id: userId,
         date: today,
-        morning_routine_completed: morningCompleted,
-        evening_routine_completed: eveningCompleted,
-        skin_condition_rating: skinRating[0],
-        mood_rating: moodRating[0],
-        sleep_hours: sleepHours ? Number.parseFloat(sleepHours) : null,
-        water_intake: waterIntake ? Number.parseInt(waterIntake) : null,
-        stress_level: stressLevel[0],
-        notes: notes || null,
+        morning_routine_completed: false,
+        evening_routine_completed: false,
+        skin_condition_rating: null,
+        mood_rating: null,
+        sleep_hours: null,
+        water_intake: null,
+        stress_level: null,
+        notes: photoNotes || null,
       }
 
       const { error: checkinError } = await supabase.from("daily_checkins").upsert(checkinData, {
@@ -113,24 +142,35 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
 
       if (checkinError) throw checkinError
 
-      // Upload and save photo if provided
-      if (photoFile) {
-        const photoUrl = await uploadPhoto()
-        if (photoUrl) {
-          const { error: photoError } = await supabase.from("progress_photos").insert({
+      if (photoFiles.length > 0) {
+        const photoUrls = await uploadPhotos()
+        if (photoUrls.length > 0) {
+          const photoInserts = photoUrls.map((photoUrl) => ({
             user_id: userId,
             photo_url: photoUrl,
             photo_type: "daily",
             notes: photoNotes || null,
             lighting_conditions: lightingConditions,
-            skin_condition_rating: skinRating[0],
-          })
+            skin_condition_rating: null,
+          }))
+
+          const { error: photoError } = await supabase.from("progress_photos").insert(photoInserts)
 
           if (photoError) throw photoError
-        }
-      }
 
-      router.push("/progress")
+          const analysis = await analyzePhotosAndSuggestRoutine(photoUrls)
+
+          if (analysis && analysis.chatMessage) {
+            router.push(`/chat/new-session?prompt=${encodeURIComponent(analysis.chatMessage)}`)
+          } else {
+            router.push(
+              "/chat/new-session?prompt=I just completed my daily check-in with photos. Can you analyze my progress and suggest any routine adjustments?",
+            )
+          }
+        }
+      } else {
+        router.push("/chat/new-session?prompt=I completed my daily check-in. Can you help me with my skincare routine?")
+      }
     } catch (error) {
       console.error("Error saving check-in:", error)
       alert("Failed to save check-in. Please try again.")
@@ -139,179 +179,75 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
     }
   }
 
-  const getRatingColor = (rating: number) => {
-    if (rating <= 3) return "text-red-600"
-    if (rating <= 6) return "text-yellow-600"
-    return "text-green-600"
-  }
-
-  const getRatingLabel = (rating: number, type: "skin" | "mood" | "stress") => {
-    if (type === "skin") {
-      if (rating <= 2) return "Very Poor"
-      if (rating <= 4) return "Poor"
-      if (rating <= 6) return "Fair"
-      if (rating <= 8) return "Good"
-      return "Excellent"
-    }
-    if (type === "mood") {
-      if (rating <= 1) return "Very Low"
-      if (rating <= 2) return "Low"
-      if (rating <= 3) return "Neutral"
-      if (rating <= 4) return "Good"
-      return "Excellent"
-    }
-    if (type === "stress") {
-      if (rating <= 1) return "Very Low"
-      if (rating <= 2) return "Low"
-      if (rating <= 3) return "Moderate"
-      if (rating <= 4) return "High"
-      return "Very High"
-    }
-    return ""
-  }
-
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <Card className="border-0 shadow-lg">
         <CardHeader>
-          <CardTitle>Today's Check-In</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Camera className="w-5 h-5 text-sage-600" />
+            Daily Skin Check-In
+          </CardTitle>
           <CardDescription>
-            {existingCheckin ? "Update your daily progress" : "Track your skin condition and routine progress"}
+            Upload photos of your skin for AI analysis and personalized routine suggestions
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Routine Completion */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Routine Completion</h3>
-            <div className="space-y-3">
-              <label className="flex items-center space-x-3">
-                <Checkbox checked={morningCompleted} onCheckedChange={setMorningCompleted} />
-                <span>Morning routine completed</span>
-              </label>
-              <label className="flex items-center space-x-3">
-                <Checkbox checked={eveningCompleted} onCheckedChange={setEveningCompleted} />
-                <span>Evening routine completed</span>
-              </label>
-            </div>
-          </div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-sage-600" />
+              Progress Photos
+            </h3>
+            <p className="text-sm text-gray-600">
+              Take photos in good lighting for the most accurate analysis. Multiple angles help provide better insights.
+            </p>
 
-          {/* Skin Condition Rating */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Skin Condition</h3>
-              <div className="text-right">
-                <span className={`text-2xl font-bold ${getRatingColor(skinRating[0])}`}>{skinRating[0]}</span>
-                <span className="text-gray-500">/10</span>
-                <p className="text-sm text-gray-600">{getRatingLabel(skinRating[0], "skin")}</p>
-              </div>
-            </div>
-            <Slider value={skinRating} onValueChange={setSkinRating} max={10} min={1} step={1} className="w-full" />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>Very Poor</span>
-              <span>Excellent</span>
-            </div>
-          </div>
-
-          {/* Mood Rating */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Mood</h3>
-              <div className="text-right">
-                <span className={`text-2xl font-bold ${getRatingColor(moodRating[0])}`}>{moodRating[0]}</span>
-                <span className="text-gray-500">/5</span>
-                <p className="text-sm text-gray-600">{getRatingLabel(moodRating[0], "mood")}</p>
-              </div>
-            </div>
-            <Slider value={moodRating} onValueChange={setMoodRating} max={5} min={1} step={1} className="w-full" />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>Very Low</span>
-              <span>Excellent</span>
-            </div>
-          </div>
-
-          {/* Lifestyle Factors */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Lifestyle Factors</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="sleep">Sleep Hours</Label>
-                <Input
-                  id="sleep"
-                  type="number"
-                  placeholder="8.5"
-                  value={sleepHours}
-                  onChange={(e) => setSleepHours(e.target.value)}
-                  step="0.5"
-                  min="0"
-                  max="12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="water">Water Intake (glasses)</Label>
-                <Input
-                  id="water"
-                  type="number"
-                  placeholder="8"
-                  value={waterIntake}
-                  onChange={(e) => setWaterIntake(e.target.value)}
-                  min="0"
-                  max="20"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label>Stress Level</Label>
-                <div className="text-right">
-                  <span className={`text-lg font-bold ${getRatingColor(6 - stressLevel[0])}`}>{stressLevel[0]}</span>
-                  <span className="text-gray-500">/5</span>
-                  <p className="text-sm text-gray-600">{getRatingLabel(stressLevel[0], "stress")}</p>
-                </div>
-              </div>
-              <Slider value={stressLevel} onValueChange={setStressLevel} max={5} min={1} step={1} className="w-full" />
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Very Low</span>
-                <span>Very High</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Progress Photo */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Progress Photo (Optional)</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-sage-300 border-dashed rounded-lg cursor-pointer bg-sage-50 hover:bg-sage-100 transition-colors">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    {photoPreview ? (
-                      <img
-                        src={photoPreview || "/placeholder.svg"}
-                        alt="Preview"
-                        className="h-20 w-20 object-cover rounded-lg"
-                      />
+                    {photoPreviews.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {photoPreviews.map((preview, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={preview || "/placeholder.svg"}
+                              alt={`Preview ${index + 1}`}
+                              className="h-24 w-full object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removePhoto(index)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     ) : (
                       <>
-                        <Camera className="w-8 h-8 mb-4 text-gray-500" />
-                        <p className="mb-2 text-sm text-gray-500">
-                          <span className="font-semibold">Click to upload</span> a progress photo
+                        <Camera className="w-10 h-10 mb-4 text-sage-600" />
+                        <p className="mb-2 text-sm text-gray-700 font-medium">Upload your skin photos</p>
+                        <p className="text-xs text-gray-500 text-center px-4">
+                          AI will analyze your photos and suggest routine adjustments based on your current products
                         </p>
                       </>
                     )}
                   </div>
-                  <input type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
+                  <input type="file" className="hidden" accept="image/*" multiple onChange={handlePhotoChange} />
                 </label>
               </div>
 
-              {photoFile && (
+              {photoFiles.length > 0 && (
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label htmlFor="photoNotes">Photo Notes</Label>
+                    <Label htmlFor="photoNotes">Observations (Optional)</Label>
                     <Textarea
                       id="photoNotes"
-                      placeholder="Any observations about your skin today..."
+                      placeholder="Any specific concerns or observations about your skin today..."
                       value={photoNotes}
                       onChange={(e) => setPhotoNotes(e.target.value)}
+                      rows={2}
                     />
                   </div>
                   <div className="space-y-2">
@@ -320,7 +256,7 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
                       id="lighting"
                       value={lightingConditions}
                       onChange={(e) => setLightingConditions(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sage-500 focus:border-sage-500"
                     >
                       <option value="natural">Natural Light</option>
                       <option value="indoor">Indoor Light</option>
@@ -333,26 +269,24 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
             </div>
           </div>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes</Label>
-            <Textarea
-              id="notes"
-              placeholder="How are you feeling about your skin today? Any changes or observations..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          {/* Save Button */}
           <Button
             onClick={saveCheckIn}
-            disabled={isLoading}
+            disabled={isLoading || isAnalyzing}
             className="w-full bg-sage-600 hover:bg-sage-700 text-white font-medium transition-colors duration-200 h-12"
             size="lg"
           >
-            {isLoading ? "Saving..." : existingCheckin ? "Update Check-In" : "Save Check-In"}
+            {isAnalyzing ? (
+              <>
+                <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                Analyzing Photos & Generating Routine Suggestions...
+              </>
+            ) : isLoading ? (
+              "Saving..."
+            ) : photoFiles.length > 0 ? (
+              "Analyze & Get Personalized Routine Suggestions"
+            ) : (
+              "Complete Check-In"
+            )}
           </Button>
         </CardContent>
       </Card>

@@ -9,12 +9,11 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // If user is authenticated, check if they've completed onboarding
   if (user) {
     const { data: profile } = await supabase.from("profiles").select("first_name, skin_type").eq("id", user.id).single()
 
     if (profile?.first_name && profile?.skin_type) {
-      redirect("/dashboard")
+      redirect("/chat/new-session")
     } else {
       redirect("/onboarding")
     }
@@ -40,8 +39,8 @@ export default async function HomePage() {
             SKINCARE SANCTUARY
           </h1>
           <p className="text-xl text-charcoal-600 max-w-2xl mx-auto leading-relaxed font-light">
-            Your personal aesthetician companion for cultivating radiant, healthy skin through mindful rituals and
-            intelligent guidance.
+            Your personal AI aesthetician for intelligent skincare guidance through natural conversation and mindful
+            rituals.
           </p>
         </div>
 
@@ -49,27 +48,26 @@ export default async function HomePage() {
           <div className="space-y-12">
             <div>
               <p className="text-charcoal-700 leading-relaxed mb-8 font-light text-center">
-                Our platform draws inspiration from the wisdom of professional aestheticians, combining time-honored
-                skincare principles with modern AI intelligence to create a deeply personal journey toward skin
-                wellness.
+                Experience skincare guidance through intelligent conversation. Our AI advisor understands your needs and
+                helps you build routines, track progress, and discover products through natural dialogue.
               </p>
 
               <div className="grid grid-cols-2 gap-6 mb-12">
                 <div className="text-center p-6 bg-white border border-sage-200 rounded-sm">
-                  <h3 className="font-serif text-lg text-charcoal-800 mb-2">Ritual Builder</h3>
-                  <p className="text-sm text-charcoal-600 font-light">Curated morning & evening routines</p>
+                  <h3 className="font-serif text-lg text-charcoal-800 mb-2">AI Conversation</h3>
+                  <p className="text-sm text-charcoal-600 font-light">Natural skincare guidance & advice</p>
                 </div>
                 <div className="text-center p-6 bg-white border border-sage-200 rounded-sm">
-                  <h3 className="font-serif text-lg text-charcoal-800 mb-2">AI Guidance</h3>
-                  <p className="text-sm text-charcoal-600 font-light">Personalized skincare wisdom</p>
+                  <h3 className="font-serif text-lg text-charcoal-800 mb-2">Smart Routines</h3>
+                  <p className="text-sm text-charcoal-600 font-light">AI-built morning & evening rituals</p>
                 </div>
                 <div className="text-center p-6 bg-white border border-sage-200 rounded-sm">
-                  <h3 className="font-serif text-lg text-charcoal-800 mb-2">Progress Journal</h3>
-                  <p className="text-sm text-charcoal-600 font-light">Visual transformation tracking</p>
+                  <h3 className="font-serif text-lg text-charcoal-800 mb-2">Progress Tracking</h3>
+                  <p className="text-sm text-charcoal-600 font-light">Visual transformation insights</p>
                 </div>
                 <div className="text-center p-6 bg-white border border-sage-200 rounded-sm">
-                  <h3 className="font-serif text-lg text-charcoal-800 mb-2">Treatment Plans</h3>
-                  <p className="text-sm text-charcoal-600 font-light">Professional care scheduling</p>
+                  <h3 className="font-serif text-lg text-charcoal-800 mb-2">Product Discovery</h3>
+                  <p className="text-sm text-charcoal-600 font-light">Personalized recommendations</p>
                 </div>
               </div>
             </div>
@@ -91,7 +89,7 @@ export default async function HomePage() {
             </div>
 
             <p className="text-center text-sm text-charcoal-500 font-light italic">
-              Where skincare becomes a mindful ritual of self-care and transformation
+              Where skincare wisdom meets intelligent conversation
             </p>
           </div>
         </div>

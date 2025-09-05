@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { createClient } from "@/lib/supabase/client"
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
-import { GripVertical, Plus, X, Search } from "lucide-react"
+import { GripVertical, Plus, X, Search, MessageCircle, Sparkles } from "lucide-react"
+import { useSearchParams, useRouter } from "next/navigation"
 
 interface Product {
   id: string
@@ -49,12 +51,45 @@ interface RoutineBuilderProps {
   onSave: () => void
 }
 
+interface ChatRoutineData {
+  name?: string
+  type?: string
+  steps?: Array<{
+    productName: string
+    brand?: string
+    instructions: string
+    amount: string
+  }>
+}
+
 export function RoutineBuilder({ routine, inventory, userId, onClose, onSave }: RoutineBuilderProps) {
   const [routineName, setRoutineName] = useState(routine?.name || "")
   const [routineType, setRoutineType] = useState(routine?.type || "morning")
   const [steps, setSteps] = useState<RoutineStep[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [chatData, setChatData] = useState<ChatRoutineData | null>(null)
+  const [showChatSuggestion, setShowChatSuggestion] = useState(false)
+
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    const chatRoutineData = searchParams.get("chatData")
+    if (chatRoutineData) {
+      try {
+        const parsedData: ChatRoutineData = JSON.parse(decodeURIComponent(chatRoutineData))
+        setChatData(parsedData)
+        setShowChatSuggestion(true)
+
+        // Auto-populate basic fields if provided
+        if (parsedData.name) setRoutineName(parsedData.name)
+        if (parsedData.type) setRoutineType(parsedData.type)
+      } catch (error) {
+        console.error("Error parsing chat routine data:", error)
+      }
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (routine?.routine_steps) {
@@ -71,6 +106,47 @@ export function RoutineBuilder({ routine, inventory, userId, onClose, onSave }: 
       )
     }
   }, [routine])
+
+  const applyChatSuggestions = () => {
+    if (!chatData?.steps) return
+
+    const newSteps: RoutineStep[] = []
+
+    chatData.steps.forEach((chatStep, index) => {
+      // Try to find matching product in inventory
+      const matchingInventoryItem = inventory.find(
+        (item) =>
+          item.products.name.toLowerCase().includes(chatStep.productName.toLowerCase()) ||
+          (chatStep.brand && item.products.brand.toLowerCase().includes(chatStep.brand.toLowerCase())),
+      )
+
+      if (matchingInventoryItem) {
+        newSteps.push({
+          product_id: matchingInventoryItem.product_id,
+          step_order: index + 1,
+          instructions: chatStep.instructions,
+          amount: chatStep.amount,
+          products: matchingInventoryItem.products,
+        })
+      }
+    })
+
+    setSteps(newSteps)
+    setShowChatSuggestion(false)
+  }
+
+  const askChatForHelp = () => {
+    const currentContext = {
+      routineName,
+      routineType,
+      existingSteps: steps.length,
+      availableProducts: inventory.map((item) => `${item.products.name} by ${item.products.brand}`),
+    }
+
+    const prompt = `Help me build a ${routineType} skincare routine. I have these products available: ${currentContext.availableProducts.join(", ")}. Please suggest a complete routine with specific steps, amounts, and instructions.`
+
+    router.push(`/chat/new-session?prompt=${encodeURIComponent(prompt)}`)
+  }
 
   const filteredInventory = inventory.filter(
     (item) =>
@@ -188,11 +264,51 @@ export function RoutineBuilder({ routine, inventory, userId, onClose, onSave }: 
   return (
     <div className="space-y-6 bg-stone-50 p-6 rounded-lg">
       <div className="border-b border-stone-200 pb-4">
-        <h2 className="font-serif text-2xl text-charcoal-900 mb-2">
-          {routine ? "Refine Your Ritual" : "Craft New Ritual"}
-        </h2>
-        <p className="text-stone-600 text-sm">Design your personalized skincare ceremony</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="font-serif text-2xl text-charcoal-900 mb-2">
+              {routine ? "Refine Your Ritual" : "Craft New Ritual"}
+            </h2>
+            <p className="text-stone-600 text-sm">Design your personalized skincare ceremony</p>
+          </div>
+          <Button
+            onClick={askChatForHelp}
+            variant="outline"
+            className="border-sage-200 text-sage-700 hover:bg-sage-50 bg-transparent"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Ask Chat for Help
+          </Button>
+        </div>
       </div>
+
+      {showChatSuggestion && chatData && (
+        <Alert className="border-sage-200 bg-sage-50">
+          <Sparkles className="h-4 w-4 text-sage-600" />
+          <AlertDescription className="flex justify-between items-center">
+            <div>
+              <p className="font-medium text-sage-800">AI Routine Suggestion Available</p>
+              <p className="text-sm text-sage-700">
+                I've prepared a {chatData.type || "custom"} routine with {chatData.steps?.length || 0} steps based on
+                our conversation.
+              </p>
+            </div>
+            <div className="flex gap-2 ml-4">
+              <Button size="sm" onClick={applyChatSuggestions} className="bg-sage-600 hover:bg-sage-700 text-white">
+                Apply Suggestions
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowChatSuggestion(false)}
+                className="border-sage-300"
+              >
+                Dismiss
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Routine Details */}
       <div className="grid grid-cols-2 gap-4">

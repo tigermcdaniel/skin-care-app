@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Search, Plus, Check } from "lucide-react"
+import { Search, Plus, Check, MessageCircle, ShoppingCart } from "lucide-react"
 
 interface Product {
   id: string
@@ -75,8 +75,35 @@ export function ProductCatalog({ products, userInventory, userId }: ProductCatal
     }
   }
 
+  const askChatAboutProduct = (product: Product) => {
+    const prompt = `Tell me about ${product.name} by ${product.brand}. Is this good for my skin type and how should I use it?`
+    router.push(`/chat/new-session?prompt=${encodeURIComponent(prompt)}`)
+  }
+
+  const orderProduct = (product: Product) => {
+    const prompt = `I want to order ${product.name} by ${product.brand}. Where can I buy this product?`
+    router.push(`/chat/new-session?prompt=${encodeURIComponent(prompt)}`)
+  }
+
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-serif text-charcoal-800">Product Discovery</h2>
+          <p className="text-charcoal-600">Browse and learn about skincare products</p>
+        </div>
+        <Button
+          onClick={() =>
+            router.push("/chat/new-session?prompt=What products should I consider for my skincare routine?")
+          }
+          variant="outline"
+          className="border-sage-200 text-sage-700 hover:bg-sage-50"
+        >
+          <MessageCircle className="h-4 w-4 mr-2" />
+          Ask for Recommendations
+        </Button>
+      </div>
+
       {/* Search and Filter */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -119,9 +146,17 @@ export function ProductCatalog({ products, userInventory, userId }: ProductCatal
                     <CardTitle className="text-lg line-clamp-2 font-serif text-charcoal-800">{product.name}</CardTitle>
                     <CardDescription className="font-medium text-charcoal-600">{product.brand}</CardDescription>
                   </div>
-                  <Badge variant="secondary" className="ml-2 bg-sage-100 text-sage-800 border-sage-200">
-                    {product.category}
-                  </Badge>
+                  <div className="flex flex-col gap-1">
+                    <Badge variant="secondary" className="ml-2 bg-sage-100 text-sage-800 border-sage-200">
+                      {product.category}
+                    </Badge>
+                    {isInInventory && (
+                      <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800 border-green-200">
+                        <Check className="h-3 w-3 mr-1" />
+                        Owned
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -156,30 +191,52 @@ export function ProductCatalog({ products, userInventory, userId }: ProductCatal
                   </div>
                 )}
 
-                <Button
-                  onClick={() => addToInventory(product.id)}
-                  disabled={isInInventory || isAddingToInventory}
-                  className={`w-full transition-all duration-300 ${
-                    isInInventory
-                      ? "bg-sage-100 text-sage-700 hover:bg-sage-100 border border-sage-200"
-                      : "bg-sage-600 hover:bg-sage-700 text-white"
-                  }`}
-                  variant={isInInventory ? "secondary" : "default"}
-                >
-                  {isInInventory ? (
-                    <>
-                      <Check className="h-4 w-4 mr-2" />
-                      In Collection
-                    </>
-                  ) : isAddingToInventory ? (
-                    "Adding..."
+                <div className="space-y-2">
+                  {/* Primary Action */}
+                  {!isInInventory ? (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => addToInventory(product.id)}
+                        disabled={isAddingToInventory}
+                        className="flex-1 bg-sage-600 hover:bg-sage-700 text-white"
+                      >
+                        {isAddingToInventory ? (
+                          "Adding..."
+                        ) : (
+                          <>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add to Collection
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => orderProduct(product)}
+                        className="flex-1 bg-rose-600 hover:bg-rose-700 text-white"
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Order
+                      </Button>
+                    </div>
                   ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add to Collection
-                    </>
+                    <Button
+                      onClick={() => orderProduct(product)}
+                      className="w-full bg-rose-600 hover:bg-rose-700 text-white"
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Reorder
+                    </Button>
                   )}
-                </Button>
+
+                  {/* Secondary Action */}
+                  <Button
+                    variant="outline"
+                    onClick={() => askChatAboutProduct(product)}
+                    className="w-full border-stone-200 text-charcoal-600 hover:bg-stone-50"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Ask Chat About This Product
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )
@@ -192,7 +249,14 @@ export function ProductCatalog({ products, userInventory, userId }: ProductCatal
             <Search className="h-12 w-12 mx-auto" />
           </div>
           <h3 className="text-lg font-medium text-charcoal-800 mb-2">No products found</h3>
-          <p className="text-charcoal-600">Try adjusting your search terms or category filter</p>
+          <p className="text-charcoal-600 mb-4">Try adjusting your search terms or ask chat for recommendations</p>
+          <Button
+            onClick={() => router.push("/chat/new-session?prompt=Help me find skincare products")}
+            className="bg-sage-600 hover:bg-sage-700 text-white"
+          >
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Ask Chat for Help
+          </Button>
         </div>
       )}
     </div>

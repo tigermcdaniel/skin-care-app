@@ -116,8 +116,10 @@ export default function OnboardingPage() {
         throw error
       }
 
-      console.log("[v0] Profile saved successfully, redirecting to dashboard")
-      router.push("/dashboard")
+      console.log("[v0] Profile saved successfully, redirecting to chat")
+      router.push(
+        "/chat/new-session?prompt=Welcome! I just completed my profile setup. Can you help me get started with my skincare journey?",
+      )
     } catch (error) {
       console.error("[v0] Error saving profile:", error)
       alert("There was an error saving your profile. Please try again.")

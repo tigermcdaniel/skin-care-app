@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarDays, Clock, User, CheckCircle, Circle } from "lucide-react"
+import { CalendarDays, Clock, User, CheckCircle, Circle, Expand } from "lucide-react"
 import Link from "next/link"
 
 interface Routine {
@@ -44,18 +44,31 @@ interface DailyCheckin {
 }
 
 interface SkincareCalendarProps {
-  routines: Routine[]
-  appointments: Appointment[]
-  checkins: DailyCheckin[]
-  userId: string
+  routines?: Routine[]
+  appointments?: Appointment[]
+  checkins?: DailyCheckin[]
+  userId?: string
+  onExpand?: () => void
+  isFullScreen?: boolean
 }
 
-export function SkincareCalendar({ routines, appointments, checkins, userId }: SkincareCalendarProps) {
+export function SkincareCalendar({
+  routines,
+  appointments,
+  checkins,
+  userId,
+  onExpand,
+  isFullScreen,
+}: SkincareCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [activeTab, setActiveTab] = useState("calendar")
 
+  const safeCheckins = checkins || []
+  const safeRoutines = routines || []
+  const safeAppointments = appointments || []
+
   // Create a map of check-ins by date for quick lookup
-  const checkinsByDate = checkins.reduce(
+  const checkinsByDate = safeCheckins.reduce(
     (acc, checkin) => {
       acc[checkin.date] = checkin
       return acc
@@ -68,12 +81,12 @@ export function SkincareCalendar({ routines, appointments, checkins, userId }: S
     const dateStr = date.toISOString().split("T")[0]
     const checkin = checkinsByDate[dateStr]
 
-    const dayAppointments = appointments.filter((apt) => apt.scheduled_date.split("T")[0] === dateStr)
+    const dayAppointments = safeAppointments.filter((apt) => apt.scheduled_date.split("T")[0] === dateStr)
 
     return {
       checkin,
       appointments: dayAppointments,
-      routines: routines.filter((r) => r.is_active),
+      routines: safeRoutines.filter((r) => r.is_active),
     }
   }
 
@@ -113,12 +126,26 @@ export function SkincareCalendar({ routines, appointments, checkins, userId }: S
     )
   }
 
-  const morningRoutines = routines.filter((r) => r.type === "morning")
-  const eveningRoutines = routines.filter((r) => r.type === "evening")
-  const upcomingAppointments = appointments.slice(0, 5)
+  const morningRoutines = safeRoutines.filter((r) => r.type === "morning")
+  const eveningRoutines = safeRoutines.filter((r) => r.type === "evening")
+  const upcomingAppointments = safeAppointments.slice(0, isFullScreen ? 10 : 5)
 
   return (
     <div className="space-y-6">
+      {!isFullScreen && onExpand && (
+        <div className="flex justify-end mb-4">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onExpand}
+            className="border-stone-200 text-charcoal-600 hover:bg-stone-50 bg-transparent"
+          >
+            <Expand className="h-3 w-3 mr-1" />
+            Expand
+          </Button>
+        </div>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="calendar">Calendar View</TabsTrigger>
@@ -127,9 +154,9 @@ export function SkincareCalendar({ routines, appointments, checkins, userId }: S
         </TabsList>
 
         <TabsContent value="calendar" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className={`grid grid-cols-1 ${isFullScreen ? "lg:grid-cols-2" : ""} gap-6`}>
             {/* Calendar */}
-            <div className="lg:col-span-2">
+            <div className={isFullScreen ? "lg:col-span-1" : ""}>
               <Card className="border-0 shadow-sm bg-stone-50">
                 <CardHeader>
                   <CardTitle className="font-serif text-charcoal-800">
@@ -143,23 +170,25 @@ export function SkincareCalendar({ routines, appointments, checkins, userId }: S
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    className="rounded-md border-0"
-                    components={{
-                      DayButton: ({ day, ...props }) => (
-                        <Button
-                          variant="ghost"
-                          className="h-12 w-12 p-0 font-normal aria-selected:opacity-100"
-                          {...props}
-                        >
-                          {renderDayContent(day.date)}
-                        </Button>
-                      ),
-                    }}
-                  />
+                  <div className={isFullScreen ? "" : "scale-90 origin-top"}>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => date && setSelectedDate(date)}
+                      className="rounded-md border-0"
+                      components={{
+                        DayButton: ({ day, ...props }) => (
+                          <Button
+                            variant="ghost"
+                            className={`${isFullScreen ? "h-12 w-12" : "h-10 w-10"} p-0 font-normal aria-selected:opacity-100`}
+                            {...props}
+                          >
+                            {renderDayContent(day.date)}
+                          </Button>
+                        ),
+                      }}
+                    />
+                  </div>
 
                   <div className="mt-4 flex items-center gap-4 text-sm text-charcoal-600">
                     <div className="flex items-center gap-2">
@@ -270,7 +299,7 @@ export function SkincareCalendar({ routines, appointments, checkins, userId }: S
         </TabsContent>
 
         <TabsContent value="routines" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className={`grid grid-cols-1 ${isFullScreen ? "md:grid-cols-2 lg:grid-cols-3" : "gap-4"} gap-6`}>
             {/* Morning Routines */}
             <Card className="border-0 shadow-sm bg-stone-50">
               <CardHeader>
@@ -282,12 +311,12 @@ export function SkincareCalendar({ routines, appointments, checkins, userId }: S
                   <div key={routine.id} className="p-4 bg-white rounded-lg border border-stone-200">
                     <h4 className="font-medium text-charcoal-800 mb-2">{routine.name}</h4>
                     <div className="space-y-2">
-                      {routine.routine_steps.slice(0, 3).map((step) => (
+                      {routine.routine_steps.slice(0, isFullScreen ? 5 : 3).map((step) => (
                         <div key={step.id} className="text-sm text-charcoal-600">
                           {step.step_order}. {step.instructions}
                         </div>
                       ))}
-                      {routine.routine_steps.length > 3 && (
+                      {!isFullScreen && routine.routine_steps.length > 3 && (
                         <p className="text-sm text-charcoal-500">+{routine.routine_steps.length - 3} more steps</p>
                       )}
                     </div>
@@ -323,12 +352,12 @@ export function SkincareCalendar({ routines, appointments, checkins, userId }: S
                   <div key={routine.id} className="p-4 bg-white rounded-lg border border-stone-200">
                     <h4 className="font-medium text-charcoal-800 mb-2">{routine.name}</h4>
                     <div className="space-y-2">
-                      {routine.routine_steps.slice(0, 3).map((step) => (
+                      {routine.routine_steps.slice(0, isFullScreen ? 5 : 3).map((step) => (
                         <div key={step.id} className="text-sm text-charcoal-600">
                           {step.step_order}. {step.instructions}
                         </div>
                       ))}
-                      {routine.routine_steps.length > 3 && (
+                      {!isFullScreen && routine.routine_steps.length > 3 && (
                         <p className="text-sm text-charcoal-500">+{routine.routine_steps.length - 3} more steps</p>
                       )}
                     </div>
@@ -398,7 +427,11 @@ export function SkincareCalendar({ routines, appointments, checkins, userId }: S
                             </div>
                           </div>
                           {appointment.notes && (
-                            <p className="text-sm text-charcoal-600 mt-2 italic">{appointment.notes}</p>
+                            <p
+                              className={`text-sm text-charcoal-600 mt-2 italic ${isFullScreen ? "" : "line-clamp-2"}`}
+                            >
+                              {appointment.notes}
+                            </p>
                           )}
                         </div>
                         <Badge
