@@ -1,11 +1,17 @@
 import { streamText } from "ai"
-import { groq } from "@ai-sdk/groq"
+import { openai } from "@ai-sdk/openai"
 import { createClient } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
   try {
     const { messages, context } = await req.json()
     const supabase = await createClient()
+
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      console.error("[v0] OpenAI API key is missing from environment variables")
+      return new Response("OpenAI API key not configured", { status: 500 })
+    }
 
     // Get user context
     const {
@@ -257,7 +263,9 @@ PRODUCT RECOMMENDATION RULES:
 `
 
     const result = await streamText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: openai("gpt-4o", {
+        apiKey: apiKey,
+      }),
       system: systemPrompt,
       messages,
       temperature: 0.7,
