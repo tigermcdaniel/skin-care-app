@@ -13,7 +13,15 @@ export default async function CalendarPage() {
     redirect("/auth/login")
   }
 
-  // Get user's active routines
+  // First, let's check ALL routines (not just active ones)
+  const { data: allRoutines } = await supabase
+    .from("routines")
+    .select("id, name, type, is_active")
+    .eq("user_id", user.id)
+
+  console.log("[v0] All user routines:", allRoutines)
+
+  // Get user's routines
   const { data: routines } = await supabase
     .from("routines")
     .select(`
@@ -32,8 +40,19 @@ export default async function CalendarPage() {
       )
     `)
     .eq("user_id", user.id)
-    .eq("is_active", true)
     .order("type")
+
+  console.log("[v0] Routines fetched:", routines)
+
+  const today = new Date().toISOString().split("T")[0]
+  const { data: todayCheckin } = await supabase
+    .from("daily_checkins")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("date", today)
+    .single()
+
+  console.log("[v0] Today's checkin:", todayCheckin)
 
   // Get upcoming appointments (next 3 months)
   const threeMonthsFromNow = new Date()
@@ -65,14 +84,50 @@ export default async function CalendarPage() {
       <div className="min-h-screen bg-stone-50">
         <div className="container mx-auto px-6 py-12 max-w-6xl">
           <div className="mb-12">
-            <h1 className="font-serif text-4xl text-charcoal-900 mb-4">Ritual Calendar</h1>
+            <h1 className="font-serif text-4xl text-charcoal-900 mb-4">Routine Calendar</h1>
             <p className="text-charcoal-600 text-lg leading-relaxed max-w-2xl">
-              Your personal sanctuary schedule. Track daily rituals, upcoming appointments, and maintain consistency in
+              Your personal sanctuary schedule. Track daily routines, upcoming appointments, and maintain consistency in
               your skincare journey.
             </p>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-stone-200 p-8">
+            <div className="mb-6 p-6 bg-red-100 border-2 border-red-500 rounded text-base">
+              <div className="font-bold text-red-800 mb-2">🔍 DEBUG INFO (Server-side data):</div>
+              <div className="space-y-1">
+                <div>
+                  <strong>User ID:</strong> {user.id}
+                </div>
+                <div>
+                  <strong>Routines count:</strong> {routines?.length || 0}
+                </div>
+                <div>
+                  <strong>All routines count:</strong> {allRoutines?.length || 0}
+                </div>
+                <div>
+                  <strong>Appointments count:</strong> {appointments?.length || 0}
+                </div>
+                <div>
+                  <strong>Checkins count:</strong> {checkins?.length || 0}
+                </div>
+                <div>
+                  <strong>Routines data:</strong>{" "}
+                  <pre className="mt-1 text-xs bg-white p-2 rounded">
+                    {JSON.stringify(
+                      routines?.map((r) => ({
+                        id: r.id,
+                        name: r.name,
+                        type: r.type,
+                        is_active: r.is_active,
+                        steps_count: r.routine_steps?.length || 0,
+                      })),
+                      null,
+                      2,
+                    ) || "[]"}
+                  </pre>
+                </div>
+              </div>
+            </div>
             <SkincareCalendar
               routines={routines || []}
               appointments={appointments || []}

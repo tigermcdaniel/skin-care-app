@@ -1060,6 +1060,55 @@ Benefits: ${product.benefits.join(", ")}`
     }
   }
 
+  // Fetch user data
+  const [user, setUser] = useState<any>(null)
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      setUser(user)
+    }
+
+    fetchUser()
+  }, [])
+
+  // Fetch appointments
+  const [appointments, setAppointments] = useState<any[]>([])
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!user?.id) return
+
+      const { data, error } = await supabase.from("appointments").select("*").eq("user_id", user.id)
+
+      if (error) {
+        console.error("Error fetching appointments:", error)
+      } else {
+        setAppointments(data || [])
+      }
+    }
+
+    fetchAppointments()
+  }, [user?.id])
+
+  // Fetch checkins
+  const [checkins, setCheckins] = useState<any[]>([])
+  useEffect(() => {
+    const fetchCheckins = async () => {
+      if (!user?.id) return
+
+      const { data, error } = await supabase.from("daily_checkins").select("*").eq("user_id", user.id)
+
+      if (error) {
+        console.error("Error fetching checkins:", error)
+      } else {
+        setCheckins(data || [])
+      }
+    }
+
+    fetchCheckins()
+  }, [user?.id])
+
   return (
     <div className="min-h-screen bg-stone-50 flex">
       {isFullScreen && (
@@ -1555,7 +1604,14 @@ Benefits: ${product.benefits.join(", ")}`
               />
             )}
             {activeTab === "calendar" && (
-              <SkincareCalendar onExpand={() => handleExpandTab("calendar")} isFullScreen={isFullScreen} />
+              <SkincareCalendar
+                routines={routines || []}
+                appointments={appointments || []}
+                checkins={checkins || []}
+                userId={user?.id}
+                onExpand={() => handleExpandTab("calendar")}
+                isFullScreen={isFullScreen}
+              />
             )}
             {activeTab === "treatments" && (
               <TreatmentsTab onExpand={() => handleExpandTab("treatments")} isFullScreen={isFullScreen} />

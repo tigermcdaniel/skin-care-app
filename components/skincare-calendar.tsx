@@ -67,6 +67,23 @@ export function SkincareCalendar({
   const safeRoutines = routines || []
   const safeAppointments = appointments || []
 
+  console.log(
+    "[v0] Calendar component received routines:",
+    safeRoutines.map((r) => ({
+      id: r.id,
+      name: r.name,
+      type: r.type,
+      is_active: r.is_active,
+    })),
+  )
+
+  console.log("[v0] Calendar data:", {
+    routinesCount: safeRoutines.length,
+    appointmentsCount: safeAppointments.length,
+    checkinsCount: safeCheckins.length,
+    activeRoutines: safeRoutines.filter((r) => r.is_active).length,
+  })
+
   // Create a map of check-ins by date for quick lookup
   const checkinsByDate = safeCheckins.reduce(
     (acc, checkin) => {
@@ -86,7 +103,7 @@ export function SkincareCalendar({
     return {
       checkin,
       appointments: dayAppointments,
-      routines: safeRoutines.filter((r) => r.is_active),
+      routines: safeRoutines, // Show all routines, not just active ones
     }
   }
 
@@ -149,7 +166,7 @@ export function SkincareCalendar({
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-          <TabsTrigger value="routines">Ritual Schedule</TabsTrigger>
+          <TabsTrigger value="routines">Routine Schedule</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
         </TabsList>
 
@@ -166,7 +183,7 @@ export function SkincareCalendar({
                     })}
                   </CardTitle>
                   <CardDescription className="text-charcoal-600">
-                    Select a date to view your rituals and appointments
+                    Select a date to view your routines and appointments
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -193,7 +210,7 @@ export function SkincareCalendar({
                   <div className="mt-4 flex items-center gap-4 text-sm text-charcoal-600">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-sage-500 rounded-full"></div>
-                      <span>Ritual Completed</span>
+                      <span>Routine Completed</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-burgundy-500 rounded-full"></div>
@@ -219,38 +236,48 @@ export function SkincareCalendar({
                 <CardContent className="space-y-4">
                   {/* Routines for selected date */}
                   <div className="space-y-3">
-                    <h4 className="font-medium text-charcoal-800">Daily Rituals</h4>
-                    {selectedDateEvents.routines.map((routine) => {
-                      const status = getRoutineStatus(routine, selectedDate)
-                      return (
-                        <div
-                          key={routine.id}
-                          className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200"
-                        >
-                          <div className="flex items-center gap-3">
-                            {status === "completed" ? (
-                              <CheckCircle className="h-5 w-5 text-sage-600" />
-                            ) : (
-                              <Circle className="h-5 w-5 text-stone-400" />
-                            )}
-                            <div>
-                              <p className="font-medium text-charcoal-800">{routine.name}</p>
-                              <p className="text-sm text-charcoal-600 capitalize">{routine.type}</p>
-                            </div>
-                          </div>
-                          <Badge
-                            variant={status === "completed" ? "default" : "secondary"}
-                            className={status === "completed" ? "bg-sage-100 text-sage-800" : ""}
+                    <h4 className="font-medium text-charcoal-800">Daily Routines</h4>
+                    {selectedDateEvents.routines.length > 0 ? (
+                      selectedDateEvents.routines.map((routine) => {
+                        const status = getRoutineStatus(routine, selectedDate)
+                        console.log("[v0] Rendering routine:", routine.name, "status:", status)
+                        return (
+                          <div
+                            key={routine.id}
+                            className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200"
                           >
-                            {status === "completed"
-                              ? "Complete"
-                              : status === "incomplete"
-                                ? "Incomplete"
-                                : "Not Tracked"}
-                          </Badge>
-                        </div>
-                      )
-                    })}
+                            <div className="flex items-center gap-3">
+                              {status === "completed" ? (
+                                <CheckCircle className="h-5 w-5 text-sage-600" />
+                              ) : (
+                                <Circle className="h-5 w-5 text-stone-400" />
+                              )}
+                              <div>
+                                <p className="font-medium text-charcoal-800">{routine.name}</p>
+                                <p className="text-sm text-charcoal-600 capitalize">{routine.type}</p>
+                              </div>
+                            </div>
+                            <Badge
+                              variant={status === "completed" ? "default" : "secondary"}
+                              className={status === "completed" ? "bg-sage-100 text-sage-800" : ""}
+                            >
+                              {status === "completed"
+                                ? "Complete"
+                                : status === "incomplete"
+                                  ? "Incomplete"
+                                  : "Not Tracked"}
+                            </Badge>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <div className="text-center py-6 text-charcoal-600 bg-white rounded-lg border border-stone-200">
+                        <p className="text-sm">No routines configured for this date</p>
+                        <Button asChild className="mt-3 bg-sage-600 hover:bg-sage-700 text-white" size="sm">
+                          <Link href="/routines">Create Routine</Link>
+                        </Button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Appointments for selected date */}
@@ -303,7 +330,7 @@ export function SkincareCalendar({
             {/* Morning Routines */}
             <Card className="border-0 shadow-sm bg-stone-50">
               <CardHeader>
-                <CardTitle className="font-serif text-charcoal-800">Morning Rituals</CardTitle>
+                <CardTitle className="font-serif text-charcoal-800">Morning Routines</CardTitle>
                 <CardDescription className="text-charcoal-600">Start your day with intention</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -326,15 +353,15 @@ export function SkincareCalendar({
                       size="sm"
                       className="mt-3 border-sage-200 text-sage-700 hover:bg-sage-50 bg-transparent"
                     >
-                      <Link href={`/routines/${routine.id}`}>View Full Ritual</Link>
+                      <Link href={`/routines/${routine.id}`}>View Full Routine</Link>
                     </Button>
                   </div>
                 ))}
                 {morningRoutines.length === 0 && (
                   <div className="text-center py-8 text-charcoal-600">
-                    <p>No morning rituals configured</p>
+                    <p>No morning routines configured</p>
                     <Button asChild className="mt-4 bg-sage-600 hover:bg-sage-700 text-white">
-                      <Link href="/routines">Create Morning Ritual</Link>
+                      <Link href="/routines">Create Morning Routine</Link>
                     </Button>
                   </div>
                 )}
@@ -344,7 +371,7 @@ export function SkincareCalendar({
             {/* Evening Routines */}
             <Card className="border-0 shadow-sm bg-stone-50">
               <CardHeader>
-                <CardTitle className="font-serif text-charcoal-800">Evening Rituals</CardTitle>
+                <CardTitle className="font-serif text-charcoal-800">Evening Routines</CardTitle>
                 <CardDescription className="text-charcoal-600">End your day with care</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -367,15 +394,15 @@ export function SkincareCalendar({
                       size="sm"
                       className="mt-3 border-sage-200 text-sage-700 hover:bg-sage-50 bg-transparent"
                     >
-                      <Link href={`/routines/${routine.id}`}>View Full Ritual</Link>
+                      <Link href={`/routines/${routine.id}`}>View Full Routine</Link>
                     </Button>
                   </div>
                 ))}
                 {eveningRoutines.length === 0 && (
                   <div className="text-center py-8 text-charcoal-600">
-                    <p>No evening rituals configured</p>
+                    <p>No evening routines configured</p>
                     <Button asChild className="mt-4 bg-sage-600 hover:bg-sage-700 text-white">
-                      <Link href="/routines">Create Evening Ritual</Link>
+                      <Link href="/routines">Create Evening Routine</Link>
                     </Button>
                   </div>
                 )}

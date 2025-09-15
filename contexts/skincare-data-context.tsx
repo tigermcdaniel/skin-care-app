@@ -135,7 +135,6 @@ export function SkincareDataProvider({ children }: { children: React.ReactNode }
             )
           `)
           .eq("user_id", currentUser.id)
-          .eq("is_active", true)
           .order("created_at", { ascending: false }),
 
         supabase

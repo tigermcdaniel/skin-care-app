@@ -54,20 +54,6 @@ export function InventoryManagerTab({ onExpand, isFullScreen }: InventoryManager
       <div className="text-center py-8">
         <Package className="h-8 w-8 mx-auto text-charcoal-400 mb-3" />
         <h3 className="font-serif text-lg text-charcoal-800 mb-2">Collection is empty</h3>
-        <p className="text-charcoal-600 text-sm mb-4">Ask your advisor for recommendations</p>
-        <Button
-          size="sm"
-          className="bg-sage-600 hover:bg-sage-700 text-white"
-          onClick={() =>
-            window.parent.postMessage(
-              { type: "SEND_MESSAGE", message: "What skincare products should I add to my collection?" },
-              "*",
-            )
-          }
-        >
-          <MessageCircle className="h-4 w-4 mr-2" />
-          Ask for Products
-        </Button>
       </div>
     )
   }
