@@ -98,6 +98,13 @@ const QUICK_COMMANDS = [
 
 const ACTION_TRIGGERS: any[] = []
 
+const formatMarkdown = (text: string) => {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/\n/g, "<br>")
+}
+
 function ChatConversationPageContent() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -111,7 +118,7 @@ function ChatConversationPageContent() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>({} as HTMLDivElement)
   const supabase = createClient()
 
   const [activeTab, setActiveTab] = useState<TabType | null>(null)
@@ -438,7 +445,7 @@ function ChatConversationPageContent() {
     }
   }
 
-  const addProductToInventory = async (product: ProductRecommendation) => {
+  const addProductToInventory = async (product: ProductRecommendation, amountRemaining = 100) => {
     try {
       setIsLoading(true)
 
@@ -465,16 +472,27 @@ function ChatConversationPageContent() {
         }
       }
 
-      // If still no product found, create a note-based inventory entry with a generic product
+      // If still no product found, create a new product entry
       if (!productId) {
-        // Find any existing product to use as a placeholder
-        const { data: anyProduct } = await supabase.from("products").select("id").limit(1)
+        const { data: newProduct, error: productError } = await supabase
+          .from("products")
+          .insert({
+            name: product.name,
+            brand: product.brand,
+            category: product.category,
+            description: product.description,
+            key_ingredients: product.key_ingredients.join(", "),
+            benefits: product.benefits.join(", "),
+          })
+          .select("id")
+          .single()
 
-        if (anyProduct && anyProduct.length > 0) {
-          productId = anyProduct[0].id
-        } else {
-          throw new Error("No products available in database")
+        if (productError || !newProduct) {
+          console.error("Error creating new product:", productError)
+          throw new Error("Failed to create new product")
         }
+
+        productId = newProduct.id
       }
 
       const userId = (await supabase.auth.getUser()).data.user?.id
@@ -498,7 +516,7 @@ Benefits: ${product.benefits.join(", ")}`
           .from("user_inventory")
           .update({
             notes: productNotes,
-            amount_remaining: 100, // Reset to full
+            amount_remaining: amountRemaining, // Reset to full
           })
           .eq("id", existingInventory.id)
 
@@ -508,7 +526,7 @@ Benefits: ${product.benefits.join(", ")}`
         const { error: inventoryError } = await supabase.from("user_inventory").insert({
           user_id: userId,
           product_id: productId,
-          amount_remaining: 100,
+          amount_remaining: amountRemaining,
           purchase_date: new Date().toISOString().split("T")[0],
           notes: productNotes,
         })
@@ -543,6 +561,79 @@ Benefits: ${product.benefits.join(", ")}`
       ])
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleRoutineCompleteAction = async (routineAction: RoutineAction) => {
+    try {
+      // Find the routine by type
+      const routine = routines.find((r) => r.type === routineAction.type && r.is_active)
+      if (!routine) {
+        alert(`No active ${routineAction.type} routine found`)
+        return
+      }
+
+      await markRoutineComplete(routine.id, routine.name)
+      alert(`${routineAction.type.charAt(0).toUpperCase() + routineAction.type.slice(1)} routine marked as complete!`)
+    } catch (error) {
+      console.error("Error completing routine:", error)
+      alert("Failed to mark routine as complete. Please try again.")
+    }
+  }
+
+  const handleCabinetAction = async (action: CabinetAction) => {
+    try {
+      if (action.action === "remove") {
+        // Find the product in inventory and remove it
+        const productToRemove = inventory?.find(
+          (item) =>
+            item.products?.name.toLowerCase() === action.product_name.toLowerCase() &&
+            item.products?.brand.toLowerCase() === action.product_brand.toLowerCase(),
+        )
+
+        if (productToRemove) {
+          await removeFromInventory(productToRemove.id)
+
+          const confirmMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: `✓ Removed ${action.product_name} by ${action.product_brand} from your cabinet.`,
+            created_at: new Date().toISOString(),
+          }
+          setMessages((prev) => [...prev, confirmMessage])
+        }
+      } else if (action.action === "add") {
+        // Create a ProductRecommendation object from the CabinetAction
+        const productRecommendation: ProductRecommendation = {
+          name: action.product_name,
+          brand: action.product_brand,
+          category: action.category || "skincare",
+          description: `AI-recommended product: ${action.reason}`,
+          key_ingredients: [],
+          benefits: [],
+          reason: action.reason,
+        }
+
+        // Use addProductToInventory which handles both existing and AI-researched products
+        await addProductToInventory(productRecommendation, action.amount_remaining || 100)
+
+        const confirmMessage: ChatMessage = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `✓ Added ${action.product_name} by ${action.product_brand} to your collection with detailed information.`,
+          created_at: new Date().toISOString(),
+        }
+        setMessages((prev) => [...prev, confirmMessage])
+      }
+    } catch (error) {
+      console.error("Error handling cabinet action:", error)
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: `Sorry, there was an error updating your cabinet. Please try again.`,
+        created_at: new Date().toISOString(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
     }
   }
 
@@ -969,85 +1060,6 @@ Benefits: ${product.benefits.join(", ")}`
     }
   }
 
-  const handleRoutineComplete = async (routineAction: RoutineAction) => {
-    try {
-      // Find the routine by type
-      const routine = routines.find((r) => r.type === routineAction.type && r.is_active)
-      if (!routine) {
-        alert(`No active ${routineAction.type} routine found`)
-        return
-      }
-
-      await markRoutineComplete(routine.id, routine.name)
-      alert(`${routineAction.type.charAt(0).toUpperCase() + routineAction.type.slice(1)} routine marked as complete!`)
-    } catch (error) {
-      console.error("Error completing routine:", error)
-      alert("Failed to mark routine as complete. Please try again.")
-    }
-  }
-
-  const handleCabinetAction = async (action: CabinetAction) => {
-    try {
-      if (action.action === "remove") {
-        // Find the product in inventory and remove it
-        const productToRemove = inventory?.find(
-          (item) =>
-            item.products?.name.toLowerCase() === action.product_name.toLowerCase() &&
-            item.products?.brand.toLowerCase() === action.product_brand.toLowerCase(),
-        )
-
-        if (productToRemove) {
-          await removeFromInventory(productToRemove.id)
-
-          const confirmMessage: ChatMessage = {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: `✓ Removed ${action.product_name} by ${action.product_brand} from your cabinet.`,
-            created_at: new Date().toISOString(),
-          }
-          setMessages((prev) => [...prev, confirmMessage])
-        }
-      } else if (action.action === "add") {
-        // Find the product in the products database and add it to inventory
-        const { data: product } = await supabase
-          .from("products")
-          .select("*")
-          .ilike("name", action.product_name)
-          .ilike("brand", action.product_brand)
-          .single()
-
-        if (product) {
-          await addToInventory(product.id, action.amount_remaining || 100)
-
-          const confirmMessage: ChatMessage = {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: `✓ Added ${action.product_name} by ${action.product_brand} to your cabinet.`,
-            created_at: new Date().toISOString(),
-          }
-          setMessages((prev) => [...prev, confirmMessage])
-        } else {
-          const errorMessage: ChatMessage = {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: `Sorry, I couldn't find ${action.product_name} by ${action.product_brand} in our product database. You might need to add it manually.`,
-            created_at: new Date().toISOString(),
-          }
-          setMessages((prev) => [...prev, errorMessage])
-        }
-      }
-    } catch (error) {
-      console.error("Error handling cabinet action:", error)
-      const errorMessage: ChatMessage = {
-        id: Date.now().toString(),
-        role: "assistant",
-        content: `Sorry, there was an error updating your cabinet. Please try again.`,
-        created_at: new Date().toISOString(),
-      }
-      setMessages((prev) => [...prev, errorMessage])
-    }
-  }
-
   return (
     <div className="min-h-screen bg-stone-50 flex">
       {isFullScreen && (
@@ -1195,19 +1207,23 @@ Benefits: ${product.benefits.join(", ")}`
                           </button>
                         ))}
 
-                        <div className="whitespace-pre-wrap text-sm text-charcoal-800 leading-relaxed">
-                          {console.log("[v0] Raw message content:", message.content)}
-                          {message.content
-                            .replace(/\[PRODUCT\]\{.*?\}\[\/PRODUCT\]/g, "")
-                            .replace(/\[ROUTINE\]\{.*?\}\[\/ROUTINE\]/g, "")
-                            .replace(/\[TREATMENT\]\{.*?\}\[\/TREATMENT\]/g, "")
-                            .replace(/\[GOAL\]\{.*?\}\[\/GOAL\]/g, "")
-                            .replace(/\[ROUTINE_ACTION\]\{.*?\}\[\/ROUTINE_ACTION\]/g, "")
-                            .replace(/\[CABINET_ACTION\]\{.*?\}\[\/CABINET_ACTION\]/g, "")
-                            .replace(/\[APPOINTMENT_ACTION\]\{.*?\}\[\/APPOINTMENT_ACTION\]/g, "")
-                            .replace(/\[CHECKIN_ACTION\]\{.*?\}\[\/CHECKIN_ACTION\]/g, "")
-                            .replace(/\[PRODUCT\]([^[]+)\[\/PRODUCT\]/g, "$1")}
-                        </div>
+                        <div
+                          className="text-sm text-charcoal-800 leading-relaxed"
+                          dangerouslySetInnerHTML={{
+                            __html: formatMarkdown(
+                              message.content
+                                .replace(/\[PRODUCT\]\{.*?\}\[\/PRODUCT\]/g, "")
+                                .replace(/\[ROUTINE\]\{.*?\}\[\/ROUTINE\]/g, "")
+                                .replace(/\[TREATMENT\]\{.*?\}\[\/TREATMENT\]/g, "")
+                                .replace(/\[GOAL\]\{.*?\}\[\/GOAL\]/g, "")
+                                .replace(/\[ROUTINE_ACTION\]\{.*?\}\[\/ROUTINE_ACTION\]/g, "")
+                                .replace(/\[CABINET_ACTION\]\{.*?\}\[\/CABINET_ACTION\]/g, "")
+                                .replace(/\[APPOINTMENT_ACTION\]\{.*?\}\[\/APPOINTMENT_ACTION\]/g, "")
+                                .replace(/\[CHECKIN_ACTION\]\{.*?\}\[\/CHECKIN_ACTION\]/g, "")
+                                .replace(/\[PRODUCT\]([^[]+)\[\/PRODUCT\]/g, "$1"),
+                            ),
+                          }}
+                        />
                       </div>
                     </div>
 
@@ -1300,7 +1316,7 @@ Benefits: ${product.benefits.join(", ")}`
                           return (
                             <button
                               key={index}
-                              onClick={() => handleRoutineComplete(action)}
+                              onClick={() => handleRoutineCompleteAction(action)}
                               disabled={isCompleted}
                               className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 ${
                                 isCompleted
