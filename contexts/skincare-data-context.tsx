@@ -90,6 +90,7 @@ interface SkincareDataContextType {
   addProductToInventory: (productId: string, notes?: string) => Promise<void>
   markProductAsUsed: (itemId: string, currentAmount: number) => Promise<void>
   deleteProductFromInventory: (itemId: string) => Promise<void>
+  removeFromInventory: (itemId: string) => Promise<void> // Alias for deleteProductFromInventory
   addCheckIn: (checkIn: Omit<CheckIn, "id" | "user_id" | "created_at">) => Promise<void>
   addGoal: (goal: Omit<Goal, "id" | "user_id" | "created_at">) => Promise<void>
 
@@ -429,6 +430,7 @@ export function SkincareDataProvider({ children }: { children: React.ReactNode }
     addProductToInventory,
     markProductAsUsed,
     deleteProductFromInventory,
+    removeFromInventory: deleteProductFromInventory, // Alias for compatibility
     addCheckIn,
     addGoal,
     onDataChange,
