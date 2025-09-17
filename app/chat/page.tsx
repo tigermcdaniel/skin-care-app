@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
+import { createClient } from "@/integrations/supabase/client"
+import { Button } from "@/app/features/shared/ui/button"
 import { MessageCircle, Plus, Clock } from "lucide-react"
 import Link from "next/link"
-import { GlobalNavigation } from "@/components/global-navigation"
+import { GlobalNavigation } from "@/app/global-navigation"
 
 interface ChatConversation {
   id: string

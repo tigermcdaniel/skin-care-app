@@ -1,5 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
+import { Button } from "@/app/features/shared/ui/button"
 import Link from "next/link"
 
 export default function SignUpSuccessPage() {

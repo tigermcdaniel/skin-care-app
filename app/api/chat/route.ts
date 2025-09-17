@@ -1,6 +1,6 @@
 import { streamText } from "ai"
 import { openai } from "@ai-sdk/openai"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/integrations/supabase/server"
 
 export async function POST(req: Request) {
   try {
@@ -263,13 +263,10 @@ PRODUCT RECOMMENDATION RULES:
 `
 
     const result = await streamText({
-      model: openai("gpt-4o", {
-        apiKey: apiKey,
-      }),
+      model: openai("gpt-4o"),
       system: systemPrompt,
       messages,
       temperature: 0.7,
-      maxTokens: 1200,
     })
 
     return result.toTextStreamResponse()

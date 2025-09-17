@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/integrations/supabase/server"
 import { groq } from "@ai-sdk/groq"
 import { generateText } from "ai"
 
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const [routinesResult, inventoryResult, recentCheckinsResult] = await Promise.all([
       supabase

@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useParams, useSearchParams, useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/integrations/supabase/client"
 import {
   Calendar,
   SquareChevronLeft as SquareChartGantt,
@@ -19,71 +19,23 @@ import {
   Plus,
   Camera,
 } from "lucide-react"
-import { useSkincareData, SkincareDataProvider } from "@/contexts/skincare-data-context"
-import { RoutineManagerTab } from "@/components/routine-manager-tab"
-import { InventoryManagerTab } from "@/components/inventory-manager-tab"
-import { ProgressDashboardTab } from "@/components/progress-dashboard-tab"
-import { SkincareCalendar } from "@/components/skincare-calendar"
-import { TreatmentsTab } from "@/components/treatments-tab"
-import { CheckInTab } from "@/components/check-in-tab"
+import { useSkincareData, SkincareDataProvider } from "@/app/features/shared/contexts/skincare-data-context"
+import { RoutineManagerTab } from "@/app/features/routines/routine-manager-tab"
+import { InventoryManagerTab } from "@/app/features/inventory/inventory-manager-tab"
+import { ProgressDashboardTab } from "@/app/features/progress/progress-dashboard-tab"
+import { SkincareCalendar } from "@/app/features/calendar/skincare-calendar"
+import { TreatmentsTab } from "@/app/features/treatments/treatments-tab"
+import { CheckInTab } from "@/app/features/check-in/check-in-tab"
+import { ChatMessageComponent } from "../components/chat-message"
+import { ChatInput } from "../components/chat-input"
+import { ChatActionHandlers } from "../lib/chat-action-handlers"
+import { parseStructuredResponse, parseCheckinActions, cleanMessageContent } from "../lib/chat-response-parser"
 
 interface ChatMessage {
   id: string
   role: "user" | "assistant"
   content: string
   created_at: string
-}
-
-interface ProductRecommendation {
-  name: string
-  brand: string
-  category: string
-  description: string
-  key_ingredients: string[]
-  benefits: string[]
-  reason: string
-}
-
-interface RoutineUpdate {
-  type: "morning" | "evening"
-  changes: string[]
-}
-
-interface TreatmentSuggestion {
-  type: string
-  reason: string
-  frequency: string
-}
-
-interface GoalSuggestion {
-  title: string
-  description: string
-  target_date: string
-}
-
-interface RoutineAction {
-  type: "morning" | "evening"
-  routine_name: string
-  action: "complete"
-}
-
-interface CabinetAction {
-  action: "add" | "remove"
-  product_name: string
-  product_brand: string
-  category?: string
-  amount_remaining?: number
-  reason: string
-}
-
-type AppointmentAction = {
-  action: "add"
-  treatment_type: string
-  date: string
-  time: string
-  provider: string
-  location: string
-  notes?: string
 }
 
 type TabType = "routines" | "collection" | "products" | "progress" | "calendar" | "treatments" | "checkin" | null
@@ -95,15 +47,6 @@ const QUICK_COMMANDS = [
   "Recommend products for dry skin",
   "Help me with breakouts",
 ]
-
-const ACTION_TRIGGERS: any[] = []
-
-const formatMarkdown = (text: string) => {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.*?)\*/g, "<em>$1</em>")
-    .replace(/\n/g, "<br>")
-}
 
 function ChatConversationPageContent() {
   const params = useParams()
@@ -140,6 +83,8 @@ function ChatConversationPageContent() {
     onDataChange,
     removeFromInventory,
   } = useSkincareData()
+
+  const actionHandlers = new ChatActionHandlers()
 
   useEffect(() => {
     const cleanup = onDataChange(() => {
@@ -300,263 +245,36 @@ function ChatConversationPageContent() {
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value)
-  }
-
   const handleQuickCommand = (command: string) => {
     setInput(command)
     setShowActionTriggers(false)
   }
 
-  const handleActionTrigger = (trigger: (typeof ACTION_TRIGGERS)[0]) => {
-    const systemMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "assistant",
-      content: `I'm opening your ${trigger.label.toLowerCase()} for you. You can reference this information and come back to chat for any questions or actions.`,
-      created_at: new Date().toISOString(),
-    }
-
-    setMessages((prev) => [...prev, systemMessage])
-
-    router.push(trigger.href)
-  }
-
-  const acceptRoutineUpdate = async (routine: RoutineUpdate) => {
-    try {
-      console.log("[v0] Accepting routine update:", routine)
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        alert("Please log in to update your routine")
-        return
-      }
-
-      const { data: existingRoutines, error: fetchError } = await supabase
-        .from("routines")
-        .select("id, name")
-        .eq("user_id", user.id)
-        .eq("type", routine.type)
-        .eq("is_active", true)
-
-      if (fetchError) {
-        console.error("[v0] Error fetching routine:", fetchError)
-        alert("Failed to find your existing routine. Please try again.")
-        return
-      }
-
-      let routineId: string
-      let routineName: string
-
-      if (!existingRoutines || existingRoutines.length === 0) {
-        const { data: newRoutine, error: createError } = await supabase
-          .from("routines")
-          .insert({
-            user_id: user.id,
-            name: `${routine.type.charAt(0).toUpperCase() + routine.type.slice(1)} Routine`,
-            type: routine.type,
-            is_active: true,
-          })
-          .select("id, name")
-          .single()
-
-        if (createError || !newRoutine) {
-          console.error("[v0] Error creating routine:", createError)
-          alert("Failed to create routine. Please try again.")
-          return
-        }
-
-        routineId = newRoutine.id
-        routineName = newRoutine.name
-      } else {
-        const existingRoutine = existingRoutines[0]
-        routineId = existingRoutine.id
-        routineName = existingRoutine.name
-      }
-
-      const { data: existingProduct, error: productError } = await supabase
-        .from("products")
-        .select("id")
-        .limit(1)
-        .single()
-
-      if (productError || !existingProduct) {
-        console.error("[v0] Error finding existing product:", productError)
-        alert("Unable to find products in database. Please contact support.")
-        return
-      }
-
-      const placeholderProductId = existingProduct.id
-
-      const { data: existingSteps, error: stepsError } = await supabase
-        .from("routine_steps")
-        .select("step_order")
-        .eq("routine_id", routineId)
-        .order("step_order", { ascending: false })
-        .limit(1)
-
-      if (stepsError) {
-        console.error("[v0] Error fetching routine steps:", stepsError)
-      }
-
-      const nextStepOrder = existingSteps && existingSteps.length > 0 ? existingSteps[0].step_order + 1 : 1
-
-      const newSteps = routine.changes.map((change, index) => ({
-        routine_id: routineId,
-        step_order: nextStepOrder + index,
-        instructions: change,
-        product_id: placeholderProductId,
-        amount: "As needed",
-      }))
-
-      const { error: insertError } = await supabase.from("routine_steps").insert(newSteps)
-
-      if (insertError) {
-        console.error("[v0] Error inserting routine steps:", insertError)
-        alert("Failed to update routine. Please try again.")
-        return
-      }
-
-      const updatedName = routineName.includes("(Updated)") ? routineName : `${routineName} (Updated)`
-
-      const { error: updateError } = await supabase
-        .from("routines")
-        .update({
-          name: updatedName,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", routineId)
-
-      if (updateError) {
-        console.error("[v0] Error updating routine:", updateError)
-        alert("Failed to update routine name. Please try again.")
-        return
-      }
-
-      console.log("[v0] Successfully updated routine")
-      alert(
-        `${routine.type.charAt(0).toUpperCase() + routine.type.slice(1)} routine updated successfully! Check your routines to see the changes.`,
-      )
-    } catch (error) {
-      console.error("[v0] Error updating routine:", error)
-      alert("Failed to update routine. Please try again.")
-    }
-  }
-
-  const addProductToInventory = async (product: ProductRecommendation, amountRemaining = 100) => {
+  const handleAddProduct = async (product: any) => {
     try {
       setIsLoading(true)
-
-      // Look for an existing product that matches or is similar
-      const { data: existingProduct } = await supabase
-        .from("products")
-        .select("id")
-        .eq("name", product.name)
-        .eq("brand", product.brand)
-        .single()
-
-      let productId = existingProduct?.id
-
-      // If no exact match, try to find a similar product in the same category
-      if (!productId) {
-        const { data: similarProducts } = await supabase
-          .from("products")
-          .select("id")
-          .eq("category", product.category)
-          .limit(1)
-
-        if (similarProducts && similarProducts.length > 0) {
-          productId = similarProducts[0].id
-        }
-      }
-
-      // If still no product found, create a new product entry
-      if (!productId) {
-        const { data: newProduct, error: productError } = await supabase
-          .from("products")
-          .insert({
-            name: product.name,
-            brand: product.brand,
-            category: product.category,
-            description: product.description,
-            key_ingredients: product.key_ingredients.join(", "),
-            benefits: product.benefits.join(", "),
-          })
-          .select("id")
-          .single()
-
-        if (productError || !newProduct) {
-          console.error("Error creating new product:", productError)
-          throw new Error("Failed to create new product")
-        }
-
-        productId = newProduct.id
-      }
-
-      const userId = (await supabase.auth.getUser()).data.user?.id
-      const { data: existingInventory } = await supabase
-        .from("user_inventory")
-        .select("id, notes")
-        .eq("user_id", userId)
-        .eq("product_id", productId)
-        .single()
-
-      // Add to user's inventory with detailed notes about the actual product
-      const productNotes = `Recommended Product: ${product.name} by ${product.brand}
-Category: ${product.category}
-Description: ${product.description}
-Key Ingredients: ${product.key_ingredients.join(", ")}
-Benefits: ${product.benefits.join(", ")}`
-
-      if (existingInventory) {
-        // Update existing entry with new notes
-        const { error: updateError } = await supabase
-          .from("user_inventory")
-          .update({
-            notes: productNotes,
-            amount_remaining: amountRemaining, // Reset to full
-          })
-          .eq("id", existingInventory.id)
-
-        if (updateError) throw updateError
-      } else {
-        // Insert new inventory entry
-        const { error: inventoryError } = await supabase.from("user_inventory").insert({
-          user_id: userId,
-          product_id: productId,
-          amount_remaining: amountRemaining,
-          purchase_date: new Date().toISOString().split("T")[0],
-          notes: productNotes,
-        })
-
-        if (inventoryError) throw inventoryError
-      }
-
-      // Refresh data
-      await refreshData()
-
+      const result = await actionHandlers.addProductToInventory(product)
+      
       // Show success message
-      const actionText = existingInventory ? "updated" : "added"
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           role: "assistant",
-          content: `Great! I've ${actionText} ${product.name} by ${product.brand} in your collection with detailed information. You can see it in your Collection tab.`,
-          timestamp: new Date(),
+          content: `Great! I've ${result.actionText} ${product.name} by ${product.brand} in your collection with detailed information. You can see it in your Collection tab.`,
+          created_at: new Date().toISOString(),
         },
       ])
+      
+      await refreshData()
     } catch (error) {
-      console.error("Error adding product to inventory:", error)
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           role: "assistant",
           content: `Sorry, I couldn't add ${product.name} to your collection. Please try again.`,
-          timestamp: new Date(),
+          created_at: new Date().toISOString(),
         },
       ])
     } finally {
@@ -564,69 +282,27 @@ Benefits: ${product.benefits.join(", ")}`
     }
   }
 
-  const handleRoutineCompleteAction = async (routineAction: RoutineAction) => {
-    try {
-      // Find the routine by type
-      const routine = routines.find((r) => r.type === routineAction.type && r.is_active)
-      if (!routine) {
-        alert(`No active ${routineAction.type} routine found`)
-        return
-      }
-
-      await markRoutineComplete(routine.id, routine.name)
-      alert(`${routineAction.type.charAt(0).toUpperCase() + routineAction.type.slice(1)} routine marked as complete!`)
-    } catch (error) {
-      console.error("Error completing routine:", error)
-      alert("Failed to mark routine as complete. Please try again.")
-    }
+  const handleAcceptRoutine = async (routine: any) => {
+    await actionHandlers.acceptRoutineUpdate(routine)
   }
 
-  const handleCabinetAction = async (action: CabinetAction) => {
+  const handleCompleteRoutine = async (action: any) => {
+    await actionHandlers.handleRoutineCompleteAction(action, routines, markRoutineComplete)
+  }
+
+  const handleCabinetAction = async (action: any) => {
     try {
-      if (action.action === "remove") {
-        // Find the product in inventory and remove it
-        const productToRemove = inventory?.find(
-          (item) =>
-            item.products?.name.toLowerCase() === action.product_name.toLowerCase() &&
-            item.products?.brand.toLowerCase() === action.product_brand.toLowerCase(),
-        )
-
-        if (productToRemove) {
-          await removeFromInventory(productToRemove.id)
-
-          const confirmMessage: ChatMessage = {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: `✓ Removed ${action.product_name} by ${action.product_brand} from your cabinet.`,
-            created_at: new Date().toISOString(),
-          }
-          setMessages((prev) => [...prev, confirmMessage])
-        }
-      } else if (action.action === "add") {
-        // Create a ProductRecommendation object from the CabinetAction
-        const productRecommendation: ProductRecommendation = {
-          name: action.product_name,
-          brand: action.product_brand,
-          category: action.category || "skincare",
-          description: `AI-recommended product: ${action.reason}`,
-          key_ingredients: [],
-          benefits: [],
-          reason: action.reason,
-        }
-
-        // Use addProductToInventory which handles both existing and AI-researched products
-        await addProductToInventory(productRecommendation, action.amount_remaining || 100)
-
+      const result = await actionHandlers.handleCabinetAction(action, inventory, removeFromInventory)
+      if (result?.success) {
         const confirmMessage: ChatMessage = {
           id: Date.now().toString(),
           role: "assistant",
-          content: `✓ Added ${action.product_name} by ${action.product_brand} to your collection with detailed information.`,
+          content: result.message,
           created_at: new Date().toISOString(),
         }
         setMessages((prev) => [...prev, confirmMessage])
       }
     } catch (error) {
-      console.error("Error handling cabinet action:", error)
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
         role: "assistant",
@@ -635,6 +311,51 @@ Benefits: ${product.benefits.join(", ")}`
       }
       setMessages((prev) => [...prev, errorMessage])
     }
+  }
+
+  const handleCheckinAction = async (action: any) => {
+    try {
+      const result = await actionHandlers.handleCheckinAction(action)
+      if (result?.success) {
+        const successMessage: ChatMessage = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: result.message,
+          created_at: new Date().toISOString(),
+        }
+        setMessages((prev) => [...prev, successMessage])
+        await saveMessage("assistant", successMessage.content)
+        
+        if (result.analysis) {
+          const analysisMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: `I've analyzed your photos and added them to your daily check-in! Here's what I found:\n\n**Skin Analysis**: ${result.analysis}\n\nWould you like me to suggest any routine adjustments based on this analysis?`,
+            created_at: new Date().toISOString(),
+          }
+          setMessages((prev) => [...prev, analysisMessage])
+          await saveMessage("assistant", analysisMessage.content)
+        }
+      }
+      
+      await refreshData()
+    } catch (error) {
+      console.error("Error adding photos to check-in:", error)
+      alert("Failed to add photos to check-in. Please try again.")
+    }
+  }
+
+  const handleAddAppointment = async (action: any) => {
+    await actionHandlers.handleAppointmentAction(action)
+  }
+
+  const handleCreateGoal = async (goal: any) => {
+    await actionHandlers.createGoal(goal, addGoal)
+    await refreshData()
+  }
+
+  const handleTreatmentSuggestion = async (treatment: any) => {
+    console.log("Treatment suggestion clicked:", treatment)
   }
 
   const saveMessage = async (role: "user" | "assistant", content: string) => {
@@ -703,261 +424,6 @@ Benefits: ${product.benefits.join(", ")}`
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
-
-  const parseStructuredResponse = (content: string) => {
-    const products: ProductRecommendation[] = []
-    const routines: RoutineUpdate[] = []
-    const treatments: TreatmentSuggestion[] = []
-    const goals: GoalSuggestion[] = []
-    const routineActions: RoutineAction[] = []
-    const cabinetActions: CabinetAction[] = []
-    const appointmentActions: AppointmentAction[] = []
-
-    // Parse products
-    const productMatches = content.match(/\[PRODUCT\](.*?)\[\/PRODUCT\]/g)
-    if (productMatches) {
-      productMatches.forEach((match) => {
-        try {
-          const jsonStr = match.replace(/\[PRODUCT\]/, "").replace(/\[\/PRODUCT\]/, "")
-          const product = JSON.parse(jsonStr)
-          products.push(product)
-        } catch (e) {
-          console.error("Failed to parse product:", e)
-        }
-      })
-    }
-
-    // Parse routines
-    const routineMatches = content.match(/\[ROUTINE\](.*?)\[\/ROUTINE\]/g)
-    if (routineMatches) {
-      routineMatches.forEach((match) => {
-        try {
-          const jsonStr = match.replace(/\[ROUTINE\]/, "").replace(/\[\/ROUTINE\]/, "")
-          const routine = JSON.parse(jsonStr)
-          routines.push(routine)
-        } catch (e) {
-          console.error("Failed to parse routine:", e)
-        }
-      })
-    }
-
-    // Parse treatments
-    const treatmentMatches = content.match(/\[TREATMENT\](.*?)\[\/TREATMENT\]/g)
-    if (treatmentMatches) {
-      treatmentMatches.forEach((match) => {
-        try {
-          const jsonStr = match.replace(/\[TREATMENT\]/, "").replace(/\[\/TREATMENT\]/, "")
-          const treatment = JSON.parse(jsonStr)
-          treatments.push(treatment)
-        } catch (e) {
-          console.error("Failed to parse treatment:", e)
-        }
-      })
-    }
-
-    // Parse goals
-    const goalMatches = content.match(/\[GOAL\](.*?)\[\/GOAL\]/g)
-    if (goalMatches) {
-      goalMatches.forEach((match) => {
-        try {
-          const jsonStr = match.replace(/\[GOAL\]/, "").replace(/\[\/GOAL\]/, "")
-          const goal = JSON.parse(jsonStr)
-          goals.push(goal)
-        } catch (e) {
-          console.error("Failed to parse goal:", e)
-        }
-      })
-    }
-
-    // Parse routine actions
-    const routineActionMatches = content.match(/\[ROUTINE_ACTION\](.*?)\[\/ROUTINE_ACTION\]/g)
-    if (routineActionMatches) {
-      routineActionMatches.forEach((match) => {
-        try {
-          const jsonStr = match.replace(/\[ROUTINE_ACTION\]/, "").replace(/\[\/ROUTINE_ACTION\]/, "")
-          const routineAction = JSON.parse(jsonStr)
-          routineActions.push(routineAction)
-        } catch (e) {
-          console.error("Failed to parse routine action:", e)
-        }
-      })
-    }
-
-    // Parse cabinet actions
-    const cabinetActionMatches = content.match(/\[CABINET_ACTION\](.*?)\[\/CABINET_ACTION\]/g)
-    if (cabinetActionMatches) {
-      cabinetActionMatches.forEach((match) => {
-        try {
-          const jsonStr = match.replace(/\[CABINET_ACTION\]/, "").replace(/\[\/CABINET_ACTION\]/, "")
-          const cabinetAction = JSON.parse(jsonStr)
-          cabinetActions.push(cabinetAction)
-        } catch (e) {
-          console.error("Failed to parse cabinet action:", e)
-        }
-      })
-    }
-
-    const appointmentActionMatches = content.match(/\[APPOINTMENT_ACTION\](.*?)\[\/APPOINTMENT_ACTION\]/g)
-    if (appointmentActionMatches) {
-      appointmentActionMatches.forEach((match) => {
-        try {
-          const jsonStr = match.replace(/\[APPOINTMENT_ACTION\]/, "").replace(/\[\/APPOINTMENT_ACTION\]/, "")
-          const appointmentAction = JSON.parse(jsonStr)
-          appointmentActions.push(appointmentAction)
-        } catch (e) {
-          console.error("Failed to parse appointment action:", e)
-        }
-      })
-    }
-
-    return { products, routines, treatments, goals, routineActions, cabinetActions, appointmentActions }
-  }
-
-  const parseCheckinActions = (content: string) => {
-    const checkinRegex = /\[CHECKIN_ACTION\]\{(.*?)\}\[\/CHECKIN_ACTION\]/g
-    const actions = []
-    let match
-
-    while ((match = checkinRegex.exec(content)) !== null) {
-      try {
-        const actionData = JSON.parse(match[1])
-        actions.push(actionData)
-      } catch (error) {
-        console.error("Error parsing checkin action:", error)
-      }
-    }
-
-    return actions
-  }
-
-  const handleCheckinAction = async (action: any) => {
-    try {
-      const { user } = await supabase.auth.getUser()
-      if (!user.data.user) return
-
-      const today = new Date().toISOString().split("T")[0]
-
-      // Create or update daily check-in
-      const checkinData = {
-        user_id: user.data.user.id,
-        date: today,
-        morning_routine_completed: false,
-        evening_routine_completed: false,
-        skin_condition_rating: null,
-        mood_rating: null,
-        sleep_hours: null,
-        water_intake: null,
-        stress_level: null,
-        notes: action.notes || null,
-      }
-
-      const { error: checkinError } = await supabase.from("daily_checkins").upsert(checkinData, {
-        onConflict: "user_id,date",
-      })
-
-      if (checkinError) throw checkinError
-
-      // Add photos to progress_photos table
-      if (action.photo_urls && action.photo_urls.length > 0) {
-        const photoInserts = action.photo_urls.map((photoUrl: string) => ({
-          user_id: user.data.user.id,
-          photo_url: photoUrl,
-          photo_type: "daily",
-          notes: action.notes || null,
-          lighting_conditions: action.lighting || "natural",
-          skin_condition_rating: null,
-        }))
-
-        const { error: photoError } = await supabase.from("progress_photos").insert(photoInserts)
-        if (photoError) throw photoError
-
-        // Trigger photo analysis
-        try {
-          const analysisResponse = await fetch("/api/analyze-photos", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              photoUrls: action.photo_urls,
-              userId: user.data.user.id,
-              notes: action.notes,
-              lightingConditions: action.lighting || "natural",
-            }),
-          })
-
-          if (analysisResponse.ok) {
-            const analysis = await analysisResponse.json()
-
-            // Add AI analysis message to chat
-            const analysisMessage: ChatMessage = {
-              id: Date.now().toString(),
-              role: "assistant",
-              content: `I've analyzed your photos and added them to your daily check-in! Here's what I found:\n\n**Skin Analysis**: ${analysis.analysis.summary}\n\nWould you like me to suggest any routine adjustments based on this analysis?`,
-              created_at: new Date().toISOString(),
-            }
-
-            setMessages((prev) => [...prev, analysisMessage])
-            await saveMessage("assistant", analysisMessage.content)
-          }
-        } catch (analysisError) {
-          console.error("Error analyzing photos:", analysisError)
-        }
-      }
-
-      // Refresh data
-      refreshData()
-
-      // Show success message
-      const successMessage: ChatMessage = {
-        id: Date.now().toString(),
-        role: "assistant",
-        content: `Perfect! I've added your photos to today's check-in. ${action.photo_urls?.length > 0 ? "Your photos are being analyzed for personalized insights." : ""}`,
-        created_at: new Date().toISOString(),
-      }
-
-      setMessages((prev) => [...prev, successMessage])
-      await saveMessage("assistant", successMessage.content)
-    } catch (error) {
-      console.error("Error adding photos to check-in:", error)
-      alert("Failed to add photos to check-in. Please try again.")
-    }
-  }
-
-  const handleAppointmentAction = async (action: AppointmentAction) => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        alert("Please log in to add appointments")
-        return
-      }
-
-      const { error } = await supabase.from("appointments").insert({
-        user_id: user.id,
-        treatment_type: action.treatment_type,
-        date: action.date,
-        time: action.time,
-        provider: action.provider,
-        location: action.location,
-        notes: action.notes || "",
-        status: "scheduled",
-      })
-
-      if (error) {
-        console.error("Error adding appointment:", error)
-        alert("Failed to add appointment. Please try again.")
-      } else {
-        alert("Appointment added successfully!")
-        // Refresh data context
-        window.dispatchEvent(new CustomEvent("refreshSkincareData"))
-      }
-    } catch (error) {
-      console.error("Error adding appointment:", error)
-      alert("Failed to add appointment. Please try again.")
-    }
-  }
 
   const handleExpandTab = (tab: TabType) => {
     setActiveTab(tab)
@@ -1041,24 +507,6 @@ Benefits: ${product.benefits.join(", ")}`
       }
     }
   }, [isResizing])
-
-  const createGoal = async (goal: GoalSuggestion) => {
-    try {
-      await addGoal({
-        title: goal.title,
-        description: goal.description,
-        target_date: goal.target_date,
-        status: "active",
-      })
-
-      // Refresh data to show the new goal in Active Goals
-      await refreshData()
-
-      console.log("[v0] Goal created successfully:", goal.title)
-    } catch (error) {
-      console.error("Error creating goal:", error)
-    }
-  }
 
   // Fetch user data
   const [user, setUser] = useState<any>(null)
@@ -1232,239 +680,22 @@ Benefits: ${product.benefits.join(", ")}`
             </div>
           )}
 
-          {messages.map((message) => {
-            if (message.role === "assistant") {
-              const { products, routines, treatments, goals, routineActions, cabinetActions, appointmentActions } =
-                parseStructuredResponse(message.content)
-
-              return (
-                <div key={message.id} className="flex space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-sage-600" />
-                  </div>
-                  <div className="flex-1 space-y-3">
-                    <div className="bg-white rounded-lg p-4 shadow-sm border border-stone-200">
-                      <div className="prose prose-sm max-w-none">
-                        {parseCheckinActions(message.content).map((action, index) => (
-                          <button
-                            key={`checkin-${index}`}
-                            onClick={() => handleCheckinAction(action)}
-                            className="inline-flex items-center px-4 py-2 bg-sage-600 text-white rounded-lg hover:bg-sage-700 transition-colors text-sm font-medium"
-                          >
-                            <Camera className="w-4 h-4 mr-2" />
-                            Add to Daily Check-in
-                          </button>
-                        ))}
-
-                        <div
-                          className="text-sm text-charcoal-800 leading-relaxed"
-                          dangerouslySetInnerHTML={{
-                            __html: formatMarkdown(
-                              message.content
-                                .replace(/\[PRODUCT\]\{.*?\}\[\/PRODUCT\]/g, "")
-                                .replace(/\[ROUTINE\]\{.*?\}\[\/ROUTINE\]/g, "")
-                                .replace(/\[TREATMENT\]\{.*?\}\[\/TREATMENT\]/g, "")
-                                .replace(/\[GOAL\]\{.*?\}\[\/GOAL\]/g, "")
-                                .replace(/\[ROUTINE_ACTION\]\{.*?\}\[\/ROUTINE_ACTION\]/g, "")
-                                .replace(/\[CABINET_ACTION\]\{.*?\}\[\/CABINET_ACTION\]/g, "")
-                                .replace(/\[APPOINTMENT_ACTION\]\{.*?\}\[\/APPOINTMENT_ACTION\]/g, "")
-                                .replace(/\[CHECKIN_ACTION\]\{.*?\}\[\/CHECKIN_ACTION\]/g, "")
-                                .replace(/\[PRODUCT\]([^[]+)\[\/PRODUCT\]/g, "$1"),
-                            ),
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {products.length > 0 && (
-                      <div className="space-y-2">
-                        {products.map((product, index) => (
-                          <div key={index} className="bg-sage-50 rounded-lg p-3 border border-sage-200">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-charcoal-900">{product.name}</h4>
-                                <p className="text-sm text-charcoal-600 mb-1">by {product.brand}</p>
-                                <p className="text-xs text-charcoal-500 mb-2">{product.description}</p>
-                                <div className="flex flex-wrap gap-1 mb-2">
-                                  {product.key_ingredients.map((ingredient, i) => (
-                                    <span key={i} className="text-xs bg-white px-2 py-1 rounded-full text-charcoal-600">
-                                      {ingredient}
-                                    </span>
-                                  ))}
-                                </div>
-                                <p className="text-xs text-sage-700 italic">{product.reason}</p>
-                              </div>
-                              <button
-                                onClick={() => addProductToInventory(product)}
-                                disabled={isLoading}
-                                className="ml-3 px-3 py-1 bg-sage-600 hover:bg-sage-700 text-white text-xs rounded-md transition-colors disabled:opacity-50"
-                              >
-                                Add to Collection
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {routines.length > 0 && (
-                      <div className="space-y-2">
-                        {routines.map((routine, index) => (
-                          <button
-                            key={index}
-                            onClick={() => acceptRoutineUpdate(routine)}
-                            className="w-full bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                            <span>Accept Changes</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {treatments.length > 0 && (
-                      <div className="space-y-2">
-                        {treatments.map((treatment, index) => (
-                          <button
-                            key={index}
-                            onClick={() => console.log("Treatment suggestion clicked:", treatment)}
-                            className="w-full bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
-                          >
-                            <Stethoscope className="w-4 h-4" />
-                            <span>{treatment.type}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {goals.length > 0 && (
-                      <div className="space-y-2">
-                        {goals.map((goal, index) => (
-                          <button
-                            key={index}
-                            onClick={() => createGoal(goal)}
-                            className="w-full bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
-                          >
-                            <ClipboardCheck className="w-4 h-4" />
-                            <span>Create Goal</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {routineActions.length > 0 && (
-                      <div className="space-y-2">
-                        {routineActions.map((action, index) => {
-                          const today = new Date().toISOString().split("T")[0]
-                          const todayCheckin = checkIns?.find((c) => c.date === today)
-                          const isCompleted =
-                            action.type === "morning"
-                              ? todayCheckin?.morning_routine_completed
-                              : todayCheckin?.evening_routine_completed
-
-                          return (
-                            <button
-                              key={index}
-                              onClick={() => handleRoutineCompleteAction(action)}
-                              disabled={isCompleted}
-                              className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 ${
-                                isCompleted
-                                  ? "bg-green-100 text-green-800 cursor-not-allowed"
-                                  : "bg-sage-600 hover:bg-sage-700 text-white"
-                              }`}
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                              <span>{isCompleted ? "Completed" : `Mark ${action.type} routine complete`}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    )}
-
-                    {cabinetActions.length > 0 && (
-                      <div className="space-y-2">
-                        {cabinetActions.map((action, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleCabinetAction(action)}
-                            className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 ${
-                              action.action === "remove"
-                                ? "bg-red-600 hover:bg-red-700 text-white"
-                                : "bg-green-600 hover:bg-green-700 text-white"
-                            }`}
-                          >
-                            {action.action === "remove" ? (
-                              <>
-                                <Minus className="w-4 h-4" />
-                                <span>Remove from Cabinet</span>
-                              </>
-                            ) : (
-                              <>
-                                <Plus className="w-4 h-4" />
-                                <span>Add to Cabinet</span>
-                              </>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {appointmentActions.length > 0 && (
-                      <div className="space-y-2">
-                        {appointmentActions.map((action, index) => (
-                          <div key={index} className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-charcoal-900">{action.treatment_type}</h4>
-                                <p className="text-sm text-charcoal-600">
-                                  {new Date(action.date).toLocaleDateString()} at {action.time}
-                                </p>
-                                <p className="text-sm text-charcoal-600">{action.provider}</p>
-                                <p className="text-xs text-charcoal-500">{action.location}</p>
-                                {action.notes && <p className="text-xs text-charcoal-500 mt-1">{action.notes}</p>}
-                              </div>
-                              <button
-                                onClick={() => handleAppointmentAction(action)}
-                                disabled={isLoading}
-                                className="ml-3 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-md transition-colors disabled:opacity-50 flex items-center space-x-1"
-                              >
-                                <Calendar className="w-3 h-3" />
-                                <span>Add Appointment</span>
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            }
-
-            return (
-              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-3xl p-4 rounded-lg ${
-                    message.role === "user"
-                      ? "bg-sage-600 text-white"
-                      : "bg-stone-100 text-charcoal-900 border border-stone-200"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap leading-relaxed">
-                    {message.content
-                      .replace(/\[PRODUCT\]([^{].*?)\[\/PRODUCT\]/g, "$1")
-                      .replace(/\[PRODUCT\]\{.*?\}\[\/PRODUCT\]/g, "")
-                      .replace(/\[ROUTINE\].*?\[\/ROUTINE\]/g, "")
-                      .replace(/\[TREATMENT\].*?\[\/TREATMENT\]/g, "")
-                      .replace(/\[GOAL\].*?\[\/GOAL\]/g, "")
-                      .replace(/\[ROUTINE_ACTION\].*?\[\/ROUTINE_ACTION\]/g, "")
-                      .replace(/\[CABINET_ACTION\].*?\[\/CABINET_ACTION\]/g, "")
-                      .trim()}
-                  </p>
-                </div>
-              </div>
-            )
-          })}
+          {messages.map((message) => (
+            <ChatMessageComponent
+              key={message.id}
+              message={message}
+              onAddProduct={handleAddProduct}
+              onAcceptRoutine={handleAcceptRoutine}
+              onCompleteRoutine={handleCompleteRoutine}
+              onCabinetAction={handleCabinetAction}
+              onAddAppointment={handleAddAppointment}
+              onCheckinAction={handleCheckinAction}
+              onCreateGoal={handleCreateGoal}
+              onTreatmentSuggestion={handleTreatmentSuggestion}
+              isLoading={isLoading}
+              checkIns={checkIns}
+            />
+          ))}
 
           {isLoading && (
             <div className="flex justify-start">
@@ -1487,69 +718,20 @@ Benefits: ${product.benefits.join(", ")}`
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="bg-white border-t border-stone-200 p-4">
-          {messages.length === 0 && (
-            <div className="mb-4">
-              <p className="text-sm text-stone-600 mb-2">Quick commands:</p>
-              <div className="flex flex-wrap gap-2">
-                {QUICK_COMMANDS.map((command, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleQuickCommand(command)}
-                    className="px-3 py-1 text-sm bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors"
-                  >
-                    {command}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {imagePreview && (
-            <div className="mb-4 relative inline-block">
-              <img
-                src={imagePreview || "/placeholder.svg"}
-                alt="Preview"
-                className="max-w-32 max-h-32 rounded-lg border border-stone-200"
-              />
-              <button
-                onClick={removeImage}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="flex space-x-4">
-            <div className="flex-1 relative">
-              <input
-                type="text"
-                value={input}
-                onChange={handleInputChange}
-                placeholder="Ask me about your skincare routine, products, or concerns..."
-                className="w-full px-4 py-3 pr-12 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-                disabled={isLoading}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-400 hover:text-sage-600 transition-colors"
-                disabled={isLoading}
-              >
-                <ImageIcon className="w-5 h-5" />
-              </button>
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-            </div>
-            <button
-              type="submit"
-              disabled={isLoading || (!input.trim() && !selectedImage)}
-              className="px-6 py-3 bg-sage-600 text-white rounded-lg hover:bg-sage-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Send
-            </button>
-          </form>
-        </div>
+        <ChatInput
+          input={input}
+          setInput={setInput}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          selectedImage={selectedImage}
+          imagePreview={imagePreview}
+          onImageSelect={handleImageSelect}
+          onRemoveImage={removeImage}
+          fileInputRef={fileInputRef}
+          quickCommands={QUICK_COMMANDS}
+          onQuickCommand={handleQuickCommand}
+          showQuickCommands={messages.length === 0}
+        />
       </div>
 
       {activeTab && !isFullScreen && (

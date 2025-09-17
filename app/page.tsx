@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/integrations/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/app/features/shared/ui/button"
 
 export default async function HomePage() {
   const supabase = await createClient()

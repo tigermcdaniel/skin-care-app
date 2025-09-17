@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob"
+import { BlobService } from "@/integrations/vercel/blob"
 import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
@@ -10,13 +10,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
 
-    const blob = await put(file.name, file, {
-      access: "public",
-      addRandomSuffix: true,
-    })
+    const url = await BlobService.uploadFile(file, file.name)
 
     return NextResponse.json({
-      url: blob.url,
+      url: url,
       filename: file.name,
       size: file.size,
       type: file.type,
