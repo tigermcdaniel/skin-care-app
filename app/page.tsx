@@ -75,14 +75,14 @@ export default async function HomePage() {
             <div className="space-y-4">
               <Button
                 asChild
-                className="w-full bg-sage-600 hover:bg-sage-700 text-stone-50 py-6 text-lg font-light tracking-wide rounded-sm"
+                className="w-full bg-green-700 hover:bg-green-800 text-white py-6 text-lg font-light tracking-wide rounded-sm"
               >
                 <Link href="/auth/sign-up">Begin Your Journey</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
-                className="w-full border-sage-600 text-sage-600 hover:bg-sage-50 py-6 text-lg font-light tracking-wide rounded-sm bg-transparent"
+                className="w-full border-green-700 text-green-700 hover:bg-green-50 py-6 text-lg font-light tracking-wide rounded-sm bg-transparent"
               >
                 <Link href="/auth/login">Continue Your Practice</Link>
               </Button>
