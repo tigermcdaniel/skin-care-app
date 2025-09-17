@@ -22,7 +22,7 @@ interface RoutineAction {
 }
 
 interface CabinetAction {
-  action: "add" | "remove"
+  action: "add" | "remove" | "update" // Added "update" action type
   product_name: string
   product_brand: string
   category?: string
@@ -266,7 +266,11 @@ Benefits: ${product.benefits.join(", ")}`
     }
   }
 
-  async handleRoutineCompleteAction(routineAction: RoutineAction, routines: any[], markRoutineComplete: (id: string, name: string) => Promise<void>) {
+  async handleRoutineCompleteAction(
+    routineAction: RoutineAction,
+    routines: any[],
+    markRoutineComplete: (id: string, name: string) => Promise<void>,
+  ) {
     try {
       // Find the routine by type
       const routine = routines.find((r) => r.type === routineAction.type && r.is_active)
@@ -283,7 +287,11 @@ Benefits: ${product.benefits.join(", ")}`
     }
   }
 
-  async handleCabinetAction(action: CabinetAction, inventory: any[], removeFromInventory: (id: string) => Promise<void>) {
+  async handleCabinetAction(
+    action: CabinetAction,
+    inventory: any[],
+    removeFromInventory: (id: string) => Promise<void>,
+  ) {
     try {
       if (action.action === "remove") {
         // Find the product in inventory and remove it
@@ -295,9 +303,23 @@ Benefits: ${product.benefits.join(", ")}`
 
         if (productToRemove) {
           await removeFromInventory(productToRemove.id)
-          return { success: true, message: `✓ Removed ${action.product_name} by ${action.product_brand} from your cabinet.` }
+          return {
+            success: true,
+            message: `✓ Removed ${action.product_name} by ${action.product_brand} from your cabinet.`,
+          }
         }
-      } else if (action.action === "add") {
+      } else if (action.action === "add" || action.action === "update") {
+        // Handle both add and update actions
+        // Check if product already exists in inventory for update actions
+        const existingInventoryItem = inventory?.find(
+          (item) =>
+            item.products?.name.toLowerCase() === action.product_name.toLowerCase() ||
+            (item.products?.brand.toLowerCase() === action.product_brand.toLowerCase() &&
+              item.products?.category === action.category),
+        )
+
+        const finalAction = action.action === "update" || existingInventoryItem ? "update" : "add"
+
         // Create a ProductRecommendation object from the CabinetAction
         const productRecommendation: ProductRecommendation = {
           name: action.product_name,
@@ -311,9 +333,10 @@ Benefits: ${product.benefits.join(", ")}`
 
         // Use addProductToInventory which handles both existing and AI-researched products
         const result = await this.addProductToInventory(productRecommendation, action.amount_remaining || 100)
-        return { 
-          success: true, 
-          message: `✓ Added ${action.product_name} by ${action.product_brand} to your collection with detailed information.` 
+        const actionText = finalAction === "update" ? "updated" : "added"
+        return {
+          success: true,
+          message: `✓ ${actionText.charAt(0).toUpperCase() + actionText.slice(1)} ${action.product_name} by ${action.product_brand} in your collection with detailed information.`,
         }
       }
     } catch (error) {
@@ -324,7 +347,9 @@ Benefits: ${product.benefits.join(", ")}`
 
   async handleCheckinAction(action: any) {
     try {
-      const { data: { user } } = await this.supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await this.supabase.auth.getUser()
       if (!user) return
 
       const today = new Date().toISOString().split("T")[0]
@@ -383,7 +408,7 @@ Benefits: ${product.benefits.join(", ")}`
             return {
               success: true,
               message: `Perfect! I've added your photos to today's check-in. Your photos are being analyzed for personalized insights.`,
-              analysis: analysis.analysis.summary
+              analysis: analysis.analysis.summary,
             }
           }
         } catch (analysisError) {
@@ -393,7 +418,7 @@ Benefits: ${product.benefits.join(", ")}`
 
       return {
         success: true,
-        message: `Perfect! I've added your photos to today's check-in. ${action.photo_urls?.length > 0 ? "Your photos are being analyzed for personalized insights." : ""}`
+        message: `Perfect! I've added your photos to today's check-in. ${action.photo_urls?.length > 0 ? "Your photos are being analyzed for personalized insights." : ""}`,
       }
     } catch (error) {
       console.error("Error adding photos to check-in:", error)

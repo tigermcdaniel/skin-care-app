@@ -308,12 +308,14 @@ export function SkincareDataProvider({ children }: { children: React.ReactNode }
             notifyDataChange()
           }
         }
+
+        await refreshData()
       } catch (error) {
         console.error("Error adding product to inventory:", error)
         throw error
       }
     },
-    [supabase, inventory, updateInventoryItem, notifyDataChange],
+    [supabase, inventory, updateInventoryItem, notifyDataChange, refreshData],
   )
 
   const markProductAsUsed = useCallback(

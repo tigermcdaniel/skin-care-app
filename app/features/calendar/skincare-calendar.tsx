@@ -119,8 +119,8 @@ export function SkincareCalendar({
       <div className="relative w-full h-full flex flex-col items-center justify-center">
         <span className="text-sm">{date.getDate()}</span>
         <div className="flex gap-1 mt-1">
-          {hasAppointment && <div className="w-2 h-2 bg-burgundy-500 rounded-full"></div>}
-          {hasCompletedRoutine && <div className="w-2 h-2 bg-sage-500 rounded-full"></div>}
+          {hasAppointment && <div className="w-2 h-2 bg-red-500 rounded-full"></div>}
+          {hasCompletedRoutine && <div className="w-2 h-2 bg-green-500 rounded-full"></div>}
         </div>
       </div>
     )
@@ -192,11 +192,11 @@ export function SkincareCalendar({
 
                   <div className="mt-4 flex items-center gap-4 text-sm text-charcoal-600">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-sage-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                       <span>Ritual Completed</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-burgundy-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                       <span>Appointment</span>
                     </div>
                   </div>

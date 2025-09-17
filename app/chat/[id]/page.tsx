@@ -11,13 +11,7 @@ import {
   BarChart3,
   Stethoscope,
   LogOut,
-  ImageIcon,
   ClipboardCheck,
-  Bot,
-  CheckCircle,
-  Minus,
-  Plus,
-  Camera,
 } from "lucide-react"
 import { useSkincareData, SkincareDataProvider } from "@/app/features/shared/contexts/skincare-data-context"
 import { RoutineManagerTab } from "@/app/features/routines/routine-manager-tab"
@@ -29,7 +23,6 @@ import { CheckInTab } from "@/app/features/check-in/check-in-tab"
 import { ChatMessageComponent } from "../components/chat-message"
 import { ChatInput } from "../components/chat-input"
 import { ChatActionHandlers } from "../lib/chat-action-handlers"
-import { parseStructuredResponse, parseCheckinActions, cleanMessageContent } from "../lib/chat-response-parser"
 
 interface ChatMessage {
   id: string
@@ -253,20 +246,21 @@ function ChatConversationPageContent() {
   const handleAddProduct = async (product: any) => {
     try {
       setIsLoading(true)
-      const result = await actionHandlers.addProductToInventory(product)
-      
+      await addToInventory(
+        product.id || "placeholder",
+        `Recommended Product: ${product.name} by ${product.brand}\nCategory: ${product.category}\nDescription: ${product.description}\nKey Ingredients: ${product.key_ingredients?.join(", ") || ""}\nBenefits: ${product.benefits?.join(", ") || ""}`,
+      )
+
       // Show success message
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           role: "assistant",
-          content: `Great! I've ${result.actionText} ${product.name} by ${product.brand} in your collection with detailed information. You can see it in your Collection tab.`,
+          content: `✓ Added ${product.name} by ${product.brand} to your collection with detailed information.`,
           created_at: new Date().toISOString(),
         },
       ])
-      
-      await refreshData()
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -292,17 +286,65 @@ function ChatConversationPageContent() {
 
   const handleCabinetAction = async (action: any) => {
     try {
-      const result = await actionHandlers.handleCabinetAction(action, inventory, removeFromInventory)
-      if (result?.success) {
-        const confirmMessage: ChatMessage = {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: result.message,
-          created_at: new Date().toISOString(),
+      if (action.action === "add") {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!session?.access_token) {
+          throw new Error("No authentication session found")
         }
-        setMessages((prev) => [...prev, confirmMessage])
+
+        const response = await fetch("/api/cabinet-action", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            action: "add",
+            product_name: action.product_name,
+            product_brand: action.product_brand,
+            reason: action.reason,
+            category: action.category || "skincare",
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to add product to cabinet")
+        }
+
+        const result = await response.json()
+
+        if (result.success) {
+          await refreshData()
+
+          const confirmMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: `✓ Added ${action.product_name} by ${action.product_brand} to your collection.`,
+            created_at: new Date().toISOString(),
+          }
+          setMessages((prev) => [...prev, confirmMessage])
+        } else {
+          throw new Error(result.error || "Failed to add product")
+        }
+      } else if (action.action === "remove") {
+        const result = await actionHandlers.handleCabinetAction(action, inventory, removeFromInventory)
+        if (result?.success) {
+          await refreshData()
+
+          const confirmMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: result.message,
+            created_at: new Date().toISOString(),
+          }
+          setMessages((prev) => [...prev, confirmMessage])
+        }
       }
     } catch (error) {
+      console.error("Error handling cabinet action:", error)
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
         role: "assistant",
@@ -310,38 +352,6 @@ function ChatConversationPageContent() {
         created_at: new Date().toISOString(),
       }
       setMessages((prev) => [...prev, errorMessage])
-    }
-  }
-
-  const handleCheckinAction = async (action: any) => {
-    try {
-      const result = await actionHandlers.handleCheckinAction(action)
-      if (result?.success) {
-        const successMessage: ChatMessage = {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: result.message,
-          created_at: new Date().toISOString(),
-        }
-        setMessages((prev) => [...prev, successMessage])
-        await saveMessage("assistant", successMessage.content)
-        
-        if (result.analysis) {
-          const analysisMessage: ChatMessage = {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: `I've analyzed your photos and added them to your daily check-in! Here's what I found:\n\n**Skin Analysis**: ${result.analysis}\n\nWould you like me to suggest any routine adjustments based on this analysis?`,
-            created_at: new Date().toISOString(),
-          }
-          setMessages((prev) => [...prev, analysisMessage])
-          await saveMessage("assistant", analysisMessage.content)
-        }
-      }
-      
-      await refreshData()
-    } catch (error) {
-      console.error("Error adding photos to check-in:", error)
-      alert("Failed to add photos to check-in. Please try again.")
     }
   }
 
@@ -356,6 +366,38 @@ function ChatConversationPageContent() {
 
   const handleTreatmentSuggestion = async (treatment: any) => {
     console.log("Treatment suggestion clicked:", treatment)
+  }
+
+  const handleCheckinAction = async (action: any) => {
+    try {
+      const result = await actionHandlers.handleCheckinAction(action)
+      if (result?.success) {
+        const successMessage: ChatMessage = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: result.message,
+          created_at: new Date().toISOString(),
+        }
+        setMessages((prev) => [...prev, successMessage])
+        await saveMessage("assistant", successMessage.content)
+
+        if (result.analysis) {
+          const analysisMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: `I've analyzed your photos and added them to your daily check-in! Here's what I found:\n\n**Skin Analysis**: ${result.analysis}\n\nWould you like me to suggest any routine adjustments based on this analysis?`,
+            created_at: new Date().toISOString(),
+          }
+          setMessages((prev) => [...prev, analysisMessage])
+          await saveMessage("assistant", analysisMessage.content)
+        }
+      }
+
+      await refreshData()
+    } catch (error) {
+      console.error("Error adding photos to check-in:", error)
+      alert("Failed to add photos to check-in. Please try again.")
+    }
   }
 
   const saveMessage = async (role: "user" | "assistant", content: string) => {
@@ -574,7 +616,7 @@ function ChatConversationPageContent() {
           marginRight: !isFullScreen && activeTab ? `${tabPanelWidth}px` : "0px",
         }}
       >
-        <div className="bg-white border-b border-stone-200 p-4">
+        <div className="sticky top-0 z-30 bg-white border-b border-stone-200 p-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-serif text-charcoal-900">Skincare Advisor</h1>
             <div className="flex items-center space-x-4">

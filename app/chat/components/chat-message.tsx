@@ -1,7 +1,5 @@
 "use client"
-
-import type React from "react"
-import { Bot, CheckCircle, Circle, Stethoscope, ClipboardCheck, Minus, Plus, Calendar, Camera } from "lucide-react"
+import { Bot, CheckCircle, Stethoscope, ClipboardCheck, Minus, Plus, Calendar, Camera } from "lucide-react"
 
 interface ChatMessage {
   id: string
@@ -228,17 +226,17 @@ export function ChatMessageComponent({
 
     return (
       <div className="flex space-x-3">
-        <div className="w-8 h-8 rounded-full bg-sage-100 flex items-center justify-center flex-shrink-0">
-          <Bot className="w-4 h-4 text-sage-600" />
+        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+          <Bot className="w-4 h-4 text-muted-foreground" />
         </div>
         <div className="flex-1 space-y-3">
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-stone-200">
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-border">
             <div className="prose prose-sm max-w-none">
               {parseCheckinActions(message.content).map((action, index) => (
                 <button
                   key={`checkin-${index}`}
                   onClick={() => onCheckinAction(action)}
-                  className="inline-flex items-center px-4 py-2 bg-sage-600 text-white rounded-lg hover:bg-sage-700 transition-colors text-sm font-medium"
+                  className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
                 >
                   <Camera className="w-4 h-4 mr-2" />
                   Add to Daily Check-in
@@ -246,7 +244,7 @@ export function ChatMessageComponent({
               ))}
 
               <div
-                className="text-sm text-charcoal-800 leading-relaxed"
+                className="text-sm text-foreground leading-relaxed"
                 dangerouslySetInnerHTML={{
                   __html: formatMarkdown(
                     message.content
@@ -268,25 +266,28 @@ export function ChatMessageComponent({
           {products.length > 0 && (
             <div className="space-y-2">
               {products.map((product, index) => (
-                <div key={index} className="bg-sage-50 rounded-lg p-3 border border-sage-200">
+                <div key={index} className="bg-muted/50 rounded-lg p-3 border border-border">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h4 className="font-medium text-charcoal-900">{product.name}</h4>
-                      <p className="text-sm text-charcoal-600 mb-1">by {product.brand}</p>
-                      <p className="text-xs text-charcoal-500 mb-2">{product.description}</p>
+                      <h4 className="font-medium text-foreground">{product.name}</h4>
+                      <p className="text-sm text-muted-foreground mb-1">by {product.brand}</p>
+                      <p className="text-xs text-muted-foreground mb-2">{product.description}</p>
                       <div className="flex flex-wrap gap-1 mb-2">
                         {product.key_ingredients.map((ingredient, i) => (
-                          <span key={i} className="text-xs bg-white px-2 py-1 rounded-full text-charcoal-600">
+                          <span
+                            key={i}
+                            className="text-xs bg-background px-2 py-1 rounded-full text-muted-foreground border"
+                          >
                             {ingredient}
                           </span>
                         ))}
                       </div>
-                      <p className="text-xs text-sage-700 italic">{product.reason}</p>
+                      <p className="text-xs text-muted-foreground italic">{product.reason}</p>
                     </div>
                     <button
                       onClick={() => onAddProduct(product)}
                       disabled={isLoading}
-                      className="ml-3 px-3 py-1 bg-sage-600 hover:bg-sage-700 text-white text-xs rounded-md transition-colors disabled:opacity-50"
+                      className="ml-3 px-3 py-1 bg-primary hover:bg-primary/90 text-primary-foreground text-xs rounded-md transition-colors disabled:opacity-50"
                     >
                       Add to Collection
                     </button>
@@ -302,7 +303,7 @@ export function ChatMessageComponent({
                 <button
                   key={index}
                   onClick={() => onAcceptRoutine(routine)}
-                  className="w-full bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>Accept Changes</span>
@@ -317,7 +318,7 @@ export function ChatMessageComponent({
                 <button
                   key={index}
                   onClick={() => onTreatmentSuggestion(treatment)}
-                  className="w-full bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
                 >
                   <Stethoscope className="w-4 h-4" />
                   <span>{treatment.type}</span>
@@ -332,7 +333,7 @@ export function ChatMessageComponent({
                 <button
                   key={index}
                   onClick={() => onCreateGoal(goal)}
-                  className="w-full bg-sage-600 hover:bg-sage-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
                 >
                   <ClipboardCheck className="w-4 h-4" />
                   <span>Create Goal</span>
@@ -348,8 +349,8 @@ export function ChatMessageComponent({
                 const todayCheckin = checkIns?.find((c) => c.date === today)
                 const isCompleted =
                   action.type === "morning"
-                    ? todayCheckin?.morning_routine_completed ?? false
-                    : todayCheckin?.evening_routine_completed ?? false
+                    ? (todayCheckin?.morning_routine_completed ?? false)
+                    : (todayCheckin?.evening_routine_completed ?? false)
 
                 return (
                   <button
@@ -359,7 +360,7 @@ export function ChatMessageComponent({
                     className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 ${
                       isCompleted
                         ? "bg-green-100 text-green-800 cursor-not-allowed"
-                        : "bg-sage-600 hover:bg-sage-700 text-white"
+                        : "bg-primary hover:bg-primary/90 text-primary-foreground"
                     }`}
                   >
                     <CheckCircle className="w-4 h-4" />
@@ -404,13 +405,13 @@ export function ChatMessageComponent({
                 <div key={index} className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h4 className="font-medium text-charcoal-900">{action.treatment_type}</h4>
-                      <p className="text-sm text-charcoal-600">
+                      <h4 className="font-medium text-foreground">{action.treatment_type}</h4>
+                      <p className="text-sm text-muted-foreground">
                         {new Date(action.date).toLocaleDateString()} at {action.time}
                       </p>
-                      <p className="text-sm text-charcoal-600">{action.provider}</p>
-                      <p className="text-xs text-charcoal-500">{action.location}</p>
-                      {action.notes && <p className="text-xs text-charcoal-500 mt-1">{action.notes}</p>}
+                      <p className="text-sm text-muted-foreground">{action.provider}</p>
+                      <p className="text-xs text-muted-foreground">{action.location}</p>
+                      {action.notes && <p className="text-xs text-muted-foreground mt-1">{action.notes}</p>}
                     </div>
                     <button
                       onClick={() => onAddAppointment(action)}
@@ -435,8 +436,8 @@ export function ChatMessageComponent({
       <div
         className={`max-w-3xl p-4 rounded-lg ${
           message.role === "user"
-            ? "bg-sage-600 text-white"
-            : "bg-stone-100 text-charcoal-900 border border-stone-200"
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-foreground border border-border"
         }`}
       >
         <p className="whitespace-pre-wrap leading-relaxed">

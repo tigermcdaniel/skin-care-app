@@ -39,11 +39,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-12">
-          <div className="mx-auto h-16 w-16 bg-sage-600 rounded-full flex items-center justify-center mb-6">
-            <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mx-auto h-16 w-16 bg-primary rounded-full flex items-center justify-center mb-6">
+            <svg className="h-8 w-8 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -52,21 +52,19 @@ export default function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-serif text-charcoal-900 mb-2">Welcome Back</h1>
-          <p className="text-charcoal-600 font-light">Continue your skincare sanctuary</p>
+          <h1 className="text-3xl font-serif text-foreground mb-2">Welcome Back</h1>
+          <p className="text-muted-foreground font-light">Continue your skincare sanctuary</p>
         </div>
 
-        <Card className="border border-sage-200 shadow-lg bg-white">
+        <Card className="border shadow-lg">
           <CardHeader className="pb-6">
-            <CardTitle className="text-xl font-serif text-charcoal-900">Sign In</CardTitle>
-            <CardDescription className="text-charcoal-600">
-              Enter your credentials to access your ritual
-            </CardDescription>
+            <CardTitle className="text-xl font-serif">Sign In</CardTitle>
+            <CardDescription>Enter your credentials to access your ritual</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-charcoal-700 font-medium">
+                <Label htmlFor="email" className="font-medium">
                   Email
                 </Label>
                 <Input
@@ -76,11 +74,11 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 border-sage-200 focus:border-sage-400 focus:ring-sage-400"
+                  className="h-12"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-charcoal-700 font-medium">
+                <Label htmlFor="password" className="font-medium">
                   Password
                 </Label>
                 <Input
@@ -89,26 +87,22 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 border-sage-200 focus:border-sage-400 focus:ring-sage-400"
+                  className="h-12"
                 />
               </div>
               {error && (
-                <div className="p-4 text-sm text-burgundy-700 bg-rose-50 border border-rose-200 rounded-md">
+                <div className="p-4 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
                   {error}
                 </div>
               )}
-              <Button
-                type="submit"
-                className="w-full h-12 bg-sage-600 hover:bg-sage-700 text-white font-medium transition-colors"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full h-12" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
 
             <div className="mt-8 text-center text-sm">
-              <span className="text-charcoal-600">New to our sanctuary? </span>
-              <Link href="/auth/sign-up" className="font-medium text-sage-600 hover:text-sage-700 transition-colors">
+              <span className="text-muted-foreground">New to our sanctuary? </span>
+              <Link href="/auth/sign-up" className="font-medium text-primary hover:text-primary/80 transition-colors">
                 Create account
               </Link>
             </div>
