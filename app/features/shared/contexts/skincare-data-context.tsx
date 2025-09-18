@@ -235,7 +235,7 @@ export function SkincareDataProvider({ children }: { children: React.ReactNode }
             evening_routine_completed: isEveningRoutine ? true : null,
           }
 
-          const { error } = await supabase.from("daily_checkins").insert(insertData)
+          const { data, error } = await supabase.from("daily_checkins").insert(insertData)
 
           if (error) throw error
         }
@@ -416,6 +416,19 @@ export function SkincareDataProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     refreshData()
+  }, [refreshData])
+
+  useEffect(() => {
+    const handleRefreshData = () => {
+      console.log("[v0] Received refreshSkincareData event, refreshing context data")
+      refreshData()
+    }
+
+    window.addEventListener("refreshSkincareData", handleRefreshData)
+
+    return () => {
+      window.removeEventListener("refreshSkincareData", handleRefreshData)
+    }
   }, [refreshData])
 
   const value: SkincareDataContextType = {

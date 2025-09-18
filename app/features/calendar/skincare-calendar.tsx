@@ -83,10 +83,38 @@ export function SkincareCalendar({
 
     const dayAppointments = safeAppointments.filter((apt) => apt.scheduled_date.split("T")[0] === dateStr)
 
+    // For the selected date, show routines that were actually tracked/completed
+    // If it's today or future, show active routines
+    // If it's past and has check-in data, show routines that were tracked
+    const today = new Date().toISOString().split("T")[0]
+    let relevantRoutines: Routine[] = []
+
+    if (dateStr >= today) {
+      // For today and future dates, show currently active routines
+      relevantRoutines = safeRoutines.filter((r) => r.is_active)
+    } else if (checkin) {
+      // For past dates with check-in data, show routines that were tracked
+      const trackedRoutines = safeRoutines.filter((routine) => {
+        if (routine.type === "morning" && checkin.morning_routine_completed) return true
+        if (routine.type === "evening" && checkin.evening_routine_completed) return true
+        return false
+      })
+
+      // If no routines were completed but check-in exists, show what was available
+      if (trackedRoutines.length === 0) {
+        relevantRoutines = safeRoutines.filter((r) => r.is_active)
+      } else {
+        relevantRoutines = trackedRoutines
+      }
+    } else {
+      // For past dates without check-in data, show currently active routines as fallback
+      relevantRoutines = safeRoutines.filter((r) => r.is_active)
+    }
+
     return {
       checkin,
       appointments: dayAppointments,
-      routines: safeRoutines.filter((r) => r.is_active),
+      routines: relevantRoutines,
     }
   }
 
@@ -223,31 +251,71 @@ export function SkincareCalendar({
                     {selectedDateEvents.routines.map((routine) => {
                       const status = getRoutineStatus(routine, selectedDate)
                       return (
-                        <div
-                          key={routine.id}
-                          className="flex items-center justify-between p-3 bg-white rounded-lg border border-stone-200"
-                        >
-                          <div className="flex items-center gap-3">
-                            {status === "completed" ? (
-                              <CheckCircle className="h-5 w-5 text-sage-600" />
-                            ) : (
-                              <Circle className="h-5 w-5 text-stone-400" />
-                            )}
-                            <div>
-                              <p className="font-medium text-charcoal-800">{routine.name}</p>
-                              <p className="text-sm text-charcoal-600 capitalize">{routine.type}</p>
+                        <div key={routine.id} className="p-4 bg-white rounded-lg border border-stone-200 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {status === "completed" ? (
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                              ) : (
+                                <Circle className="h-5 w-5 text-stone-400" />
+                              )}
+                              <div>
+                                <p className="font-medium text-charcoal-800">{routine.name}</p>
+                                <p className="text-sm text-charcoal-600 capitalize">{routine.type}</p>
+                              </div>
                             </div>
+                            <Badge
+                              variant={status === "completed" ? "default" : "secondary"}
+                              className={status === "completed" ? "bg-green-100 text-green-800" : ""}
+                            >
+                              {status === "completed"
+                                ? "Complete"
+                                : status === "incomplete"
+                                  ? "Incomplete"
+                                  : "Not Tracked"}
+                            </Badge>
                           </div>
-                          <Badge
-                            variant={status === "completed" ? "default" : "secondary"}
-                            className={status === "completed" ? "bg-sage-100 text-sage-800" : ""}
-                          >
-                            {status === "completed"
-                              ? "Complete"
-                              : status === "incomplete"
-                                ? "Incomplete"
-                                : "Not Tracked"}
-                          </Badge>
+
+                          {routine.routine_steps && routine.routine_steps.length > 0 && (
+                            <div className="space-y-2 pl-8">
+                              <h5 className="text-sm font-medium text-charcoal-700">Routine Steps:</h5>
+                              <div className="space-y-1">
+                                {routine.routine_steps
+                                  .sort((a, b) => a.step_order - b.step_order)
+                                  .slice(0, isFullScreen ? 8 : 5)
+                                  .map((step) => (
+                                    <div key={step.id} className="flex items-start gap-2 text-sm">
+                                      <span className="text-charcoal-500 font-medium min-w-[20px]">
+                                        {step.step_order}.
+                                      </span>
+                                      <div className="flex-1">
+                                        <p className="text-charcoal-600">
+                                          {step.instructions || "No instructions provided"}
+                                        </p>
+                                        {step.products && (
+                                          <p className="text-charcoal-500 text-xs mt-1">
+                                            Product: {step.products.brand} {step.products.name}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                {routine.routine_steps.length > (isFullScreen ? 8 : 5) && (
+                                  <p className="text-sm text-charcoal-500 pl-6">
+                                    +{routine.routine_steps.length - (isFullScreen ? 8 : 5)} more steps
+                                  </p>
+                                )}
+                              </div>
+                              <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="mt-2 border-green-200 text-green-700 hover:bg-green-50 bg-transparent"
+                              >
+                                <Link href={`/routines/${routine.id}`}>View Full Routine</Link>
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )
                     })}

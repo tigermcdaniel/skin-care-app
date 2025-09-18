@@ -46,6 +46,37 @@ interface GoalSuggestion {
   target_date: string
 }
 
+interface WeeklyRoutineSuggestion {
+  title: string
+  description: string
+  weeklySchedule: {
+    [key: string]: {
+      morning: {
+        steps: Array<{
+          product_name: string
+          product_brand: string
+          instructions: string
+          category: string
+        }>
+      }
+      evening: {
+        steps: Array<{
+          product_name: string
+          product_brand: string
+          instructions: string
+          category: string
+        }>
+      }
+    }
+  }
+  reasoning: string
+}
+
+interface WeeklyRoutineApproval {
+  action: "approve" | "deny"
+  suggestion_id: string
+}
+
 export class ChatActionHandlers {
   private supabase = createClient()
 
@@ -166,6 +197,8 @@ export class ChatActionHandlers {
       alert(
         `${routine.type.charAt(0).toUpperCase() + routine.type.slice(1)} routine updated successfully! Check your routines to see the changes.`,
       )
+
+      window.dispatchEvent(new CustomEvent("refreshSkincareData"))
     } catch (error) {
       console.error("[v0] Error updating routine:", error)
       alert("Failed to update routine. Please try again.")
@@ -473,6 +506,197 @@ Benefits: ${product.benefits.join(", ")}`
       console.log("[v0] Goal created successfully:", goal.title)
     } catch (error) {
       console.error("Error creating goal:", error)
+    }
+  }
+
+  async submitWeeklyRoutineForApproval(suggestion: WeeklyRoutineSuggestion) {
+    try {
+      const {
+        data: { user },
+      } = await this.supabase.auth.getUser()
+      if (!user) {
+        alert("Please log in to submit routine suggestions")
+        return
+      }
+
+      // Store the suggestion in the database with pending status
+      const { data: suggestionRecord, error: insertError } = await this.supabase
+        .from("routine_suggestions")
+        .insert({
+          user_id: user.id,
+          title: suggestion.title,
+          description: suggestion.description,
+          weekly_schedule: suggestion.weeklySchedule,
+          reasoning: suggestion.reasoning,
+          status: "pending_approval",
+          suggestion_type: "weekly",
+        })
+        .select("id")
+        .single()
+
+      if (insertError || !suggestionRecord) {
+        console.error("[v0] Error submitting routine suggestion:", insertError)
+        alert("Failed to submit routine suggestion. Please try again.")
+        return null
+      }
+
+      console.log("[v0] Weekly routine suggestion submitted for approval")
+      return suggestionRecord.id
+    } catch (error) {
+      console.error("[v0] Error submitting weekly routine suggestion:", error)
+      alert("Failed to submit routine suggestion. Please try again.")
+      return null
+    }
+  }
+
+  async approveWeeklyRoutine(suggestionId: string) {
+    try {
+      const {
+        data: { user },
+      } = await this.supabase.auth.getUser()
+      if (!user) {
+        alert("Please log in to approve routines")
+        return
+      }
+
+      // Get the suggestion details
+      const { data: suggestion, error: fetchError } = await this.supabase
+        .from("routine_suggestions")
+        .select("*")
+        .eq("id", suggestionId)
+        .eq("user_id", user.id)
+        .single()
+
+      if (fetchError || !suggestion) {
+        console.error("[v0] Error fetching routine suggestion:", fetchError)
+        alert("Failed to find routine suggestion. Please try again.")
+        return
+      }
+
+      // Deactivate existing routines
+      await this.supabase.from("routines").update({ is_active: false }).eq("user_id", user.id)
+
+      // Create new morning and evening routines
+      const { data: morningRoutine, error: morningError } = await this.supabase
+        .from("routines")
+        .insert({
+          user_id: user.id,
+          name: `${suggestion.title} - Morning`,
+          type: "morning",
+          is_active: true,
+        })
+        .select("id")
+        .single()
+
+      const { data: eveningRoutine, error: eveningError } = await this.supabase
+        .from("routines")
+        .insert({
+          user_id: user.id,
+          name: `${suggestion.title} - Evening`,
+          type: "evening",
+          is_active: true,
+        })
+        .select("id")
+        .single()
+
+      if (morningError || eveningError || !morningRoutine || !eveningRoutine) {
+        console.error("[v0] Error creating routines:", morningError, eveningError)
+        alert("Failed to create routines. Please try again.")
+        return
+      }
+
+      // Create routine steps for each day (using the first day's schedule as template)
+      const firstDay = Object.keys(suggestion.weekly_schedule)[0]
+      const daySchedule = suggestion.weekly_schedule[firstDay]
+
+      // Create morning routine steps
+      if (daySchedule.morning.steps.length > 0) {
+        const morningSteps = daySchedule.morning.steps.map((step, index) => ({
+          routine_id: morningRoutine.id,
+          step_order: index + 1,
+          instructions: step.instructions,
+          product_id: null, // Will be set when user customizes
+          amount: "As needed",
+        }))
+
+        await this.supabase.from("routine_steps").insert(morningSteps)
+      }
+
+      // Create evening routine steps
+      if (daySchedule.evening.steps.length > 0) {
+        const eveningSteps = daySchedule.evening.steps.map((step, index) => ({
+          routine_id: eveningRoutine.id,
+          step_order: index + 1,
+          instructions: step.instructions,
+          product_id: null, // Will be set when user customizes
+          amount: "As needed",
+        }))
+
+        await this.supabase.from("routine_steps").insert(eveningSteps)
+      }
+
+      // Mark suggestion as approved
+      await this.supabase
+        .from("routine_suggestions")
+        .update({ status: "approved", approved_at: new Date().toISOString() })
+        .eq("id", suggestionId)
+
+      console.log("[v0] Weekly routine approved and applied successfully")
+      alert("Weekly routine approved and applied! Check your routines tab to see the new schedule.")
+
+      // Refresh the data context
+      window.dispatchEvent(new CustomEvent("refreshSkincareData"))
+    } catch (error) {
+      console.error("[v0] Error approving weekly routine:", error)
+      alert("Failed to approve routine. Please try again.")
+    }
+  }
+
+  async denyWeeklyRoutine(suggestionId: string) {
+    try {
+      const {
+        data: { user },
+      } = await this.supabase.auth.getUser()
+      if (!user) {
+        alert("Please log in to deny routines")
+        return
+      }
+
+      // Mark suggestion as denied
+      const { error } = await this.supabase
+        .from("routine_suggestions")
+        .update({ status: "denied", denied_at: new Date().toISOString() })
+        .eq("id", suggestionId)
+        .eq("user_id", user.id)
+
+      if (error) {
+        console.error("[v0] Error denying routine suggestion:", error)
+        alert("Failed to deny routine suggestion. Please try again.")
+        return
+      }
+
+      console.log("[v0] Weekly routine suggestion denied")
+      alert("Routine suggestion denied. You can ask for a new suggestion anytime!")
+    } catch (error) {
+      console.error("[v0] Error denying weekly routine:", error)
+      alert("Failed to deny routine. Please try again.")
+    }
+  }
+
+  async handleWeeklyRoutineApproval(approval: WeeklyRoutineApproval, onApprovalComplete?: () => void) {
+    try {
+      if (approval.action === "approve") {
+        await this.approveWeeklyRoutine(approval.suggestion_id)
+      } else if (approval.action === "deny") {
+        await this.denyWeeklyRoutine(approval.suggestion_id)
+      }
+
+      if (onApprovalComplete) {
+        onApprovalComplete()
+      }
+    } catch (error) {
+      console.error("Error handling weekly routine approval:", error)
+      throw error
     }
   }
 }

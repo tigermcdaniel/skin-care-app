@@ -1,6 +1,7 @@
 import { streamText } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { createClient } from "@/integrations/supabase/server"
+import { getWeekStartDate } from "@/utils/dateUtils" // Assuming a utility function to get the start of the week
 
 export async function POST(req: Request) {
   try {
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
       `)
       .eq("user_id", user.id)
 
-    // Get user's routines
+    // Get user's routines with enhanced weekly context
     const { data: routines } = await supabase
       .from("routines")
       .select(`
@@ -44,8 +45,17 @@ export async function POST(req: Request) {
         )
       `)
       .eq("user_id", user.id)
+      .eq("is_active", true)
 
-    // Get recent progress and check-ins
+    console.log("[v0] Chat API - Fetched routines:", JSON.stringify(routines, null, 2))
+
+    const { data: weeklyCheckIns } = await supabase
+      .from("daily_checkins")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("date", getWeekStartDate()) // Get current week's data
+      .order("date", { ascending: false })
+
     const { data: recentProgress } = await supabase
       .from("progress_photos")
       .select("*")
@@ -65,6 +75,13 @@ export async function POST(req: Request) {
       .select("*")
       .eq("user_id", user.id)
       .eq("status", "active")
+      .order("created_at", { ascending: false })
+
+    const { data: pendingSuggestions } = await supabase
+      .from("routine_suggestions")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "pending_approval")
       .order("created_at", { ascending: false })
 
     let contextualInfo = ""
@@ -101,7 +118,7 @@ USER PROFILE:
 ${contextualInfo}
 
 CURRENT INVENTORY (${inventory?.length || 0} products):
-${inventory?.map((item) => `- ${item.products?.name} by ${item.products?.brand} (${item.products?.category}) - ${item.amount_remaining}% remaining`).join("\n") || "No products in collection"}
+${inventory?.map((item) => `- ${item.products?.name} by ${item.products?.brand} (${item.products?.category}) - ${item.amount_remaining}% remaining`).join("\\n") || "No products in collection"}
 
 CURRENT ROUTINES:
 ${
@@ -109,26 +126,49 @@ ${
     ?.map(
       (routine) => `
 ${routine.name} (${routine.type}):
-${routine.routine_steps?.map((step: any) => `  ${step.step_order}. ${step.products?.name} - ${step.amount} - ${step.instructions}`).join("\n") || "  No steps defined"}
+${routine.routine_steps?.map((step: any) => `  ${step.step_order}. ${step.products?.name} - ${step.amount} - ${step.instructions}`).join("\\n") || "  No steps defined"}
 `,
     )
-    .join("\n") || "No routines created yet"
+    .join("\\n") || "No routines created yet"
 }
 
-ACTIVE GOALS:
-${activeGoals?.map((goal) => `- ${goal.title}: ${goal.description} (Target: ${new Date(goal.target_date).toLocaleDateString()})`).join("\n") || "No active goals set"}
+WEEKLY ROUTINE SCHEDULE CONTEXT:
+The user has access to a weekly routine view that shows their routines for each day of the week (Saturday through Friday). 
+${
+  routines?.find((r) => r.type === "morning" && r.is_active)
+    ? `Their active morning routine includes: ${
+        routines
+          .find((r) => r.type === "morning" && r.is_active)
+          ?.routine_steps?.map((step: any) => step.products?.name)
+          .join(", ") || "no steps"
+      }`
+    : "No active morning routine set"
+}
+${
+  routines?.find((r) => r.type === "evening" && r.is_active)
+    ? `Their active evening routine includes: ${
+        routines
+          .find((r) => r.type === "evening" && r.is_active)
+          ?.routine_steps?.map((step: any) => step.products?.name)
+          .join(", ") || "no steps"
+      }`
+    : "No active evening routine set"
+}
 
-RECENT PROGRESS TRACKING:
-${recentCheckins?.map((checkin) => `- ${checkin.date}: Skin ${checkin.skin_condition_rating}/10, Routines: ${checkin.morning_routine_completed ? "✓" : "✗"} Morning, ${checkin.evening_routine_completed ? "✓" : "✗"} Evening`).join("\n") || "No recent check-ins"}
+CURRENT WEEK COMPLETION STATUS:
+${weeklyCheckIns?.map((checkin) => `- ${checkin.date}: Morning ${checkin.morning_routine_completed ? "✓" : "✗"}, Evening ${checkin.evening_routine_completed ? "✓" : "✗"}`).join("\\n") || "No check-ins this week"}
+
+When users ask about specific days (like "Saturday's routine" or "what should I do on Monday"), you can reference their active morning and evening routines, as these are repeated for each day of the week in their weekly schedule. You have full access to their routine information for any day they ask about.
 
 CORE RESPONSIBILITIES:
 1. **Routine Building**: Help users create, modify, and optimize their skincare routines
-2. **Product Recommendations**: Suggest ANY skincare products that match their needs with complete information
-3. **Progress Tracking**: Analyze their check-ins and provide insights
-4. **Goal Setting**: Help them set and track skincare goals
-5. **Education**: Explain ingredients, techniques, and skincare science
-6. **Workflow Guidance**: Direct users to appropriate forms/views when they need to take action
-7. **Smart Action Detection**: Automatically detect user intents and offer appropriate actions
+2. **Weekly Routine Suggestions**: Generate comprehensive weekly routine schedules when requested
+3. **Product Recommendations**: Suggest ANY skincare products that match their needs with complete information
+4. **Progress Tracking**: Analyze their check-ins and provide insights
+5. **Goal Setting**: Help them set and track skincare goals
+6. **Education**: Explain ingredients, techniques, and skincare science
+7. **Workflow Guidance**: Direct users to appropriate forms/views when they need to take action
+8. **Smart Action Detection**: Automatically detect user intents and offer appropriate actions
 
 CONTEXTUAL AWARENESS:
 - Reference specific products they can see in their collection tab
@@ -147,6 +187,7 @@ TAB-AWARE RESPONSES:
 STRUCTURED RESPONSE FORMATS:
 - Product recommendations: [PRODUCT]{"name": "Exact Product Name", "brand": "Exact Brand Name", "category": "cleanser|moisturizer|serum|sunscreen|treatment|toner|mask|exfoliant", "description": "Brief product description", "key_ingredients": ["ingredient1", "ingredient2"], "benefits": ["benefit1", "benefit2"], "reason": "Specific reason why this helps their skin type/concerns"}[/PRODUCT]
 - Routine suggestions: [ROUTINE]{"type": "morning|evening|weekly", "changes": ["Specific step 1", "Specific step 2", "Specific step 3"]}[/ROUTINE]
+- **NEW: Weekly routine suggestions**: [WEEKLY_ROUTINE]{"title": "Routine Name", "description": "Brief description", "weeklySchedule": {"saturday": {"morning": {"steps": [{"product_name": "Product", "product_brand": "Brand", "instructions": "Instructions", "category": "category"}]}, "evening": {"steps": [...]}}, "sunday": {...}, "monday": {...}, "tuesday": {...}, "wednesday": {...}, "thursday": {...}, "friday": {...}}, "reasoning": "Why this routine works for their skin"}[/WEEKLY_ROUTINE]
 - Treatment suggestions: [TREATMENT]{"type": "Treatment Name", "reason": "Why this treatment is needed", "frequency": "How often to do it"}[/TREATMENT]
 - Goal suggestions: [GOAL]{"title": "Clear and specific goal title", "description": "Detailed description of what the goal involves", "target_date": "YYYY-MM-DD"}[/GOAL]
 - Routine completion actions: [ROUTINE_ACTION]{"type": "morning|evening", "routine_name": "Exact routine name", "action": "complete"}[/ROUTINE_ACTION]
@@ -157,7 +198,36 @@ STRUCTURED RESPONSE FORMATS:
 - Appointment removal actions: [APPOINTMENT_ACTION]{"action": "remove", "appointment_id": "ID", "reason": "cancellation reason"}[/APPOINTMENT_ACTION]
 - Check-in photo actions: [CHECKIN_ACTION]{"action": "add_photos", "photo_urls": ["url1", "url2"], "notes": "Optional notes about skin condition", "lighting": "natural|indoor|flash|mixed"}[/CHECKIN_ACTION]
 
+WEEKLY ROUTINE GENERATION RULES:
+- When users ask "how do I make a routine out of these products" or similar requests, ALWAYS generate a comprehensive weekly routine
+- Use ONLY products from their current inventory when creating weekly routines
+- Create different routines for each day of the week (Saturday through Friday)
+- Vary the routine slightly each day to prevent skin adaptation and boredom
+- Include both morning and evening routines for each day
+- Base the routine on their skin type, concerns, and available products
+- Provide clear reasoning for why this weekly schedule works for their specific needs
+- Use the [WEEKLY_ROUTINE] format to generate an approval workflow
+- The weekly routine will appear as an approval card in the chat with approve/deny buttons
+- When approved, the routine will automatically populate their routines tab
+
+WEEKLY ROUTINE STRUCTURE EXAMPLE:
+When generating weekly routines, structure them like this:
+- Saturday: Focus on deep cleansing and treatment
+- Sunday: Gentle maintenance and hydration
+- Monday: Energizing start with vitamin C
+- Tuesday: Targeted treatment for specific concerns
+- Wednesday: Mid-week reset with exfoliation
+- Thursday: Nourishing and repair focus
+- Friday: Prep for weekend with intensive care
+
 ADVANCED INTENT DETECTION RULES:
+**Weekly Routine Creation Intents:**
+- "How do I make a routine out of these products" → ALWAYS generate [WEEKLY_ROUTINE]
+- "Create a routine with my products" → ALWAYS generate [WEEKLY_ROUTINE]
+- "What routine should I follow" → ALWAYS generate [WEEKLY_ROUTINE]
+- "Help me organize my skincare routine" → ALWAYS generate [WEEKLY_ROUTINE]
+- "I want a weekly skincare schedule" → ALWAYS generate [WEEKLY_ROUTINE]
+
 **Product Management Intents:**
 - "I ran out of [product]" → ALWAYS include [CABINET_ACTION] with action "remove"
 - "I finished my [product]" → ALWAYS include [CABINET_ACTION] with action "remove"
@@ -267,6 +337,7 @@ PRODUCT RECOMMENDATION RULES:
       system: systemPrompt,
       messages,
       temperature: 0.7,
+      maxOutputTokens: 8000,
     })
 
     return result.toTextStreamResponse()

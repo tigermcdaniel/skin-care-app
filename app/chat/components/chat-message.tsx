@@ -1,5 +1,18 @@
 "use client"
 import { Bot, CheckCircle, Stethoscope, ClipboardCheck, Minus, Plus, Calendar, Camera } from "lucide-react"
+import { RoutineApprovalCard } from "@/app/features/routines/routine-approval-card"
+
+const generateUUID = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  // Fallback UUID generator for environments without crypto.randomUUID
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c == "x" ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
 
 interface ChatMessage {
   id: string
@@ -60,6 +73,32 @@ type AppointmentAction = {
   notes?: string
 }
 
+interface WeeklyRoutineSuggestion {
+  title: string
+  description: string
+  weeklySchedule: {
+    [key: string]: {
+      morning: {
+        steps: Array<{
+          product_name: string
+          product_brand: string
+          instructions: string
+          category: string
+        }>
+      }
+      evening: {
+        steps: Array<{
+          product_name: string
+          product_brand: string
+          instructions: string
+          category: string
+        }>
+      }
+    }
+  }
+  reasoning: string
+}
+
 interface ChatMessageProps {
   message: ChatMessage
   onAddProduct: (product: ProductRecommendation) => void
@@ -89,6 +128,7 @@ const parseStructuredResponse = (content: string) => {
   const routineActions: RoutineAction[] = []
   const cabinetActions: CabinetAction[] = []
   const appointmentActions: AppointmentAction[] = []
+  const weeklyRoutines: WeeklyRoutineSuggestion[] = []
 
   // Parse products
   const productMatches = content.match(/\[PRODUCT\](.*?)\[\/PRODUCT\]/g)
@@ -187,7 +227,24 @@ const parseStructuredResponse = (content: string) => {
     })
   }
 
-  return { products, routines, treatments, goals, routineActions, cabinetActions, appointmentActions }
+  const weeklyRoutineMatches = content.match(/\[WEEKLY_ROUTINE\](.*?)\[\/WEEKLY_ROUTINE\]/gs)
+
+  if (weeklyRoutineMatches) {
+    weeklyRoutineMatches.forEach((match, index) => {
+      try {
+        const jsonStr = match
+          .replace(/\[WEEKLY_ROUTINE\]/, "")
+          .replace(/\[\/WEEKLY_ROUTINE\]/, "")
+          .trim()
+        const weeklyRoutine = JSON.parse(jsonStr)
+        weeklyRoutines.push(weeklyRoutine)
+      } catch (e) {
+        console.error("Failed to parse weekly routine:", e)
+      }
+    })
+  }
+
+  return { products, routines, treatments, goals, routineActions, cabinetActions, appointmentActions, weeklyRoutines }
 }
 
 const parseCheckinActions = (content: string) => {
@@ -220,9 +277,55 @@ export function ChatMessageComponent({
   isLoading,
   checkIns,
 }: ChatMessageProps) {
+  const handleApproveRoutine = async (suggestionId: string, routineData: WeeklyRoutineSuggestion) => {
+    try {
+      const response = await fetch("/api/routines/approve", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ suggestionId, routineData }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to approve routine")
+      }
+
+      window.dispatchEvent(new CustomEvent("refreshSkincareData"))
+    } catch (error) {
+      console.error("Error approving routine:", error)
+    }
+  }
+
+  const handleDenyRoutine = async (suggestionId: string) => {
+    try {
+      const response = await fetch("/api/routines/deny", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ suggestionId }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to deny routine")
+      }
+    } catch (error) {
+      console.error("Error denying routine:", error)
+    }
+  }
+
   if (message.role === "assistant") {
-    const { products, routines, treatments, goals, routineActions, cabinetActions, appointmentActions } =
-      parseStructuredResponse(message.content)
+    const {
+      products,
+      routines,
+      treatments,
+      goals,
+      routineActions,
+      cabinetActions,
+      appointmentActions,
+      weeklyRoutines,
+    } = parseStructuredResponse(message.content)
 
     return (
       <div className="flex space-x-3">
@@ -256,12 +359,30 @@ export function ChatMessageComponent({
                       .replace(/\[CABINET_ACTION\]\{.*?\}\[\/CABINET_ACTION\]/g, "")
                       .replace(/\[APPOINTMENT_ACTION\]\{.*?\}\[\/APPOINTMENT_ACTION\]/g, "")
                       .replace(/\[CHECKIN_ACTION\]\{.*?\}\[\/CHECKIN_ACTION\]/g, "")
+                      .replace(/\[WEEKLY_ROUTINE\].*?\[\/WEEKLY_ROUTINE\]/gs, "")
                       .replace(/\[PRODUCT\]([^[]+)\[\/PRODUCT\]/g, "$1"),
                   ),
                 }}
               />
             </div>
           </div>
+
+          {weeklyRoutines.length > 0 && (
+            <div className="space-y-3">
+              {weeklyRoutines.map((weeklyRoutine, index) => (
+                <RoutineApprovalCard
+                  key={index}
+                  suggestion={{
+                    ...weeklyRoutine,
+                    id: generateUUID(), // Using generateUUID function instead of crypto.randomUUID()
+                    created_at: new Date().toISOString(),
+                  }}
+                  onApprove={(suggestionId) => handleApproveRoutine(suggestionId, weeklyRoutine)}
+                  onDeny={handleDenyRoutine}
+                />
+              ))}
+            </div>
+          )}
 
           {products.length > 0 && (
             <div className="space-y-2">
@@ -374,27 +495,41 @@ export function ChatMessageComponent({
           {cabinetActions.length > 0 && (
             <div className="space-y-2">
               {cabinetActions.map((action, index) => (
-                <button
-                  key={index}
-                  onClick={() => onCabinetAction(action)}
-                  className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 ${
-                    action.action === "remove"
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : "bg-green-600 hover:bg-green-700 text-white"
-                  }`}
-                >
-                  {action.action === "remove" ? (
-                    <>
-                      <Minus className="w-4 h-4" />
-                      <span>Remove from Cabinet</span>
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4" />
-                      <span>Add to Cabinet</span>
-                    </>
-                  )}
-                </button>
+                <div key={index} className="bg-muted/50 rounded-lg p-3 border border-border">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-foreground">{action.product_name}</h4>
+                      <p className="text-sm text-muted-foreground mb-1">by {action.product_brand}</p>
+                      {action.category && <p className="text-xs text-muted-foreground mb-2">{action.category}</p>}
+                      <p className="text-xs text-muted-foreground italic">{action.reason}</p>
+                      {action.amount_remaining !== undefined && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Amount remaining: {action.amount_remaining}%
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => onCabinetAction(action)}
+                      className={`ml-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 self-end ${
+                        action.action === "remove"
+                          ? "bg-red-600 hover:bg-red-700 text-white"
+                          : "bg-green-600 hover:bg-green-700 text-white"
+                      }`}
+                    >
+                      {action.action === "remove" ? (
+                        <>
+                          <Minus className="w-4 h-4" />
+                          <span>Remove from Cabinet</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" />
+                          <span>Add to Cabinet</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -449,6 +584,7 @@ export function ChatMessageComponent({
             .replace(/\[GOAL\].*?\[\/GOAL\]/g, "")
             .replace(/\[ROUTINE_ACTION\].*?\[\/ROUTINE_ACTION\]/g, "")
             .replace(/\[CABINET_ACTION\].*?\[\/CABINET_ACTION\]/g, "")
+            .replace(/\[WEEKLY_ROUTINE\].*?\[\/WEEKLY_ROUTINE\]/gs, "")
             .trim()}
         </p>
       </div>

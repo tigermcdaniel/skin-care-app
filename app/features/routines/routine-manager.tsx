@@ -183,7 +183,7 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
           <Button
             onClick={() => router.push("/chat/new-session?prompt=Help me create a new skincare routine")}
             variant="outline"
-            className="border-sage-200 text-sage-700 hover:bg-sage-50"
+            className="border-green-200 text-green-700 hover:bg-green-50"
           >
             <MessageCircle className="h-4 w-4 mr-2" />
             Ask Chat to Build
@@ -192,7 +192,7 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
             <DialogTrigger asChild>
               <Button
                 onClick={() => openBuilder()}
-                className="bg-sage-600 hover:bg-sage-700 text-white transition-all duration-300"
+                className="bg-green-600 hover:bg-green-700 text-white transition-all duration-300"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Ritual
@@ -231,7 +231,7 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
           <div className="flex gap-3 justify-center">
             <Button
               onClick={() => router.push("/chat/new-session?prompt=Help me create my first skincare routine")}
-              className="bg-sage-600 hover:bg-sage-700 text-white"
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               <MessageCircle className="h-4 w-4 mr-2" />
               Ask Chat to Build
@@ -239,7 +239,7 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
             <Button
               onClick={() => openBuilder()}
               variant="outline"
-              className="border-sage-200 text-sage-700 hover:bg-sage-50"
+              className="border-green-200 text-green-700 hover:bg-green-50"
             >
               <Plus className="h-4 w-4 mr-2" />
               Build Manually
@@ -260,7 +260,7 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
                     <div>
                       <CardTitle className="text-lg font-serif text-charcoal-800">{routine.name}</CardTitle>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge className="bg-sage-100 text-sage-800 border-sage-200">{routine.type}</Badge>
+                        <Badge className="bg-green-100 text-green-800 border-green-200">{routine.type}</Badge>
                         {!routine.is_active && (
                           <Badge variant="secondary" className="bg-stone-100 text-stone-600">
                             Inactive
@@ -303,7 +303,7 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
                     <Button
                       onClick={() => markRoutineComplete(routine.id, routine.name)}
                       disabled={isLoading}
-                      className="flex-1 bg-sage-600 hover:bg-sage-700 text-white"
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                     >
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Mark Complete
@@ -311,7 +311,7 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
                     <Button
                       onClick={() => router.push(`/routines/${routine.id}`)}
                       variant="outline"
-                      className="flex-1 border-sage-200 text-sage-700 hover:bg-sage-50"
+                      className="flex-1 border-green-200 text-green-700 hover:bg-green-50"
                     >
                       <Play className="h-4 w-4 mr-2" />
                       Start Routine
@@ -345,7 +345,7 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
                       className={
                         routine.is_active
                           ? "text-rose-600 border-rose-200 hover:bg-rose-50"
-                          : "text-sage-600 border-sage-200 hover:bg-sage-50"
+                          : "text-green-600 border-green-200 hover:bg-green-50"
                       }
                     >
                       {routine.is_active ? "Pause" : "Activate"}

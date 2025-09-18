@@ -8,15 +8,13 @@ import {
   Calendar,
   SquareChevronLeft as SquareChartGantt,
   BookOpen,
-  BarChart3,
   Stethoscope,
   LogOut,
   ClipboardCheck,
 } from "lucide-react"
 import { useSkincareData, SkincareDataProvider } from "@/app/features/shared/contexts/skincare-data-context"
-import { RoutineManagerTab } from "@/app/features/routines/routine-manager-tab"
+import { WeeklyRoutineTab } from "@/app/features/routines/weekly-routine-tab"
 import { InventoryManagerTab } from "@/app/features/inventory/inventory-manager-tab"
-import { ProgressDashboardTab } from "@/app/features/progress/progress-dashboard-tab"
 import { SkincareCalendar } from "@/app/features/calendar/skincare-calendar"
 import { TreatmentsTab } from "@/app/features/treatments/treatments-tab"
 import { CheckInTab } from "@/app/features/check-in/check-in-tab"
@@ -31,15 +29,9 @@ interface ChatMessage {
   created_at: string
 }
 
-type TabType = "routines" | "collection" | "products" | "progress" | "calendar" | "treatments" | "checkin" | null
+type TabType = "routines" | "collection" | "calendar" | "treatments" | "checkin" | null
 
-const QUICK_COMMANDS = [
-  "What's my morning routine?",
-  "Show me products running low",
-  "How is my skin progress?",
-  "Recommend products for dry skin",
-  "Help me with breakouts",
-]
+const QUICK_COMMANDS = ["What's my morning routine?", "help me build a routine", "do i have any upcoming appointments?"]
 
 function ChatConversationPageContent() {
   const params = useParams()
@@ -162,13 +154,6 @@ function ChatConversationPageContent() {
                   amountRemaining: i.amount_remaining,
                   needsReorder: i.amount_remaining <= 20,
                 }))
-              : null,
-          progress:
-            activeTab === "progress"
-              ? {
-                  recentCheckIns: checkIns.slice(0, 5),
-                  activeGoals: goals.filter((g) => g.status === "active"),
-                }
               : null,
         },
       }
@@ -647,7 +632,7 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("routines")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "routines"
-                  ? "bg-white text-sage-700 shadow-sm"
+                  ? "bg-white text-green-700 shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >
@@ -658,7 +643,7 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("collection")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "collection"
-                  ? "bg-white text-sage-700 shadow-sm"
+                  ? "bg-white text-green-700 shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >
@@ -666,21 +651,10 @@ function ChatConversationPageContent() {
               <span>Cabinet</span>
             </button>
             <button
-              onClick={() => handleSwitchTab("progress")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "progress"
-                  ? "bg-white text-sage-700 shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>Progress</span>
-            </button>
-            <button
               onClick={() => handleSwitchTab("calendar")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "calendar"
-                  ? "bg-white text-sage-700 shadow-sm"
+                  ? "bg-white text-green-700 shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >
@@ -691,7 +665,7 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("treatments")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "treatments"
-                  ? "bg-white text-sage-700 shadow-sm"
+                  ? "bg-white text-green-700 shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >
@@ -702,7 +676,7 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("checkin")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "checkin"
-                  ? "bg-white text-sage-700 shadow-sm"
+                  ? "bg-white text-green-700 shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >
@@ -812,20 +786,10 @@ function ChatConversationPageContent() {
           </div>
           <div className="h-full overflow-y-auto p-4">
             {activeTab === "routines" && (
-              <RoutineManagerTab onExpand={() => handleExpandTab("routines")} isFullScreen={isFullScreen} />
+              <WeeklyRoutineTab onExpand={() => handleExpandTab("routines")} isFullScreen={isFullScreen} />
             )}
             {activeTab === "collection" && (
               <InventoryManagerTab onExpand={() => handleExpandTab("collection")} isFullScreen={isFullScreen} />
-            )}
-            {activeTab === "progress" && (
-              <ProgressDashboardTab
-                onExpand={() => handleExpandTab("progress")}
-                isFullScreen={isFullScreen}
-                onSendMessage={(message) => {
-                  setInput(message)
-                  handleSubmit(new Event("submit") as any)
-                }}
-              />
             )}
             {activeTab === "calendar" && (
               <SkincareCalendar

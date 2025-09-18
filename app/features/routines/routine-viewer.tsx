@@ -93,26 +93,26 @@ export function RoutineViewer({ routine, userId }: RoutineViewerProps) {
   const getRoutineIcon = (type: string) => {
     switch (type) {
       case "morning":
-        return <Sun className="h-6 w-6 text-sage-600" />
+        return <Sun className="h-6 w-6 text-green-600" />
       case "evening":
-        return <Moon className="h-6 w-6 text-sage-600" />
+        return <Moon className="h-6 w-6 text-green-600" />
       case "weekly":
-        return <Calendar className="h-6 w-6 text-sage-600" />
+        return <Calendar className="h-6 w-6 text-green-600" />
       default:
-        return <Clock className="h-6 w-6 text-sage-600" />
+        return <Clock className="h-6 w-6 text-green-600" />
     }
   }
 
   const getRoutineTypeColor = (type: string) => {
     switch (type) {
       case "morning":
-        return "bg-sage-100 text-sage-800 border-sage-200"
+        return "bg-green-100 text-green-800 border-green-200"
       case "evening":
-        return "bg-charcoal-100 text-charcoal-800 border-charcoal-200"
+        return "bg-green-100 text-green-800 border-green-200"
       case "weekly":
-        return "bg-stone-100 text-stone-800 border-stone-200"
+        return "bg-green-100 text-green-800 border-green-200"
       default:
-        return "bg-stone-100 text-stone-800 border-stone-200"
+        return "bg-green-100 text-green-800 border-green-200"
     }
   }
 
@@ -174,7 +174,7 @@ export function RoutineViewer({ routine, userId }: RoutineViewerProps) {
         <CardHeader>
           <CardTitle className="flex items-center justify-between font-serif text-charcoal-900">
             <span>Ritual Progress</span>
-            <span className="text-lg font-bold text-sage-700">{completionPercentage}%</span>
+            <span className="text-lg font-bold text-green-700">{completionPercentage}%</span>
           </CardTitle>
           <CardDescription className="text-stone-600">
             {completedSteps.size} of {routine.routine_steps.length} steps completed
@@ -183,7 +183,7 @@ export function RoutineViewer({ routine, userId }: RoutineViewerProps) {
         <CardContent>
           <div className="w-full bg-stone-200 rounded-full h-3">
             <div
-              className="bg-sage-600 h-3 rounded-full transition-all duration-300"
+              className="bg-green-600 h-3 rounded-full transition-all duration-300"
               style={{ width: `${completionPercentage}%` }}
             />
           </div>
@@ -201,7 +201,7 @@ export function RoutineViewer({ routine, userId }: RoutineViewerProps) {
             <Card
               key={step.id}
               className={`border-stone-200 shadow-sm transition-all ${
-                isCompleted ? "bg-sage-50 border-sage-200" : "bg-white"
+                isCompleted ? "bg-green-50 border-green-200" : "bg-white"
               }`}
             >
               <CardContent className="p-6">
@@ -210,11 +210,11 @@ export function RoutineViewer({ routine, userId }: RoutineViewerProps) {
                     <Checkbox
                       checked={isCompleted}
                       onCheckedChange={() => toggleStepCompletion(step.id)}
-                      className="mt-1 border-stone-400 data-[state=checked]:bg-sage-600 data-[state=checked]:border-sage-600"
+                      className="mt-1 border-stone-400 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
                     />
                     <div
                       className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${
-                        isCompleted ? "bg-sage-600" : "bg-stone-400"
+                        isCompleted ? "bg-green-600" : "bg-stone-400"
                       }`}
                     >
                       {isCompleted ? <CheckCircle className="h-4 w-4" /> : index + 1}
@@ -277,7 +277,7 @@ export function RoutineViewer({ routine, userId }: RoutineViewerProps) {
               <Button
                 onClick={completeRoutine}
                 disabled={isCompleting || completedSteps.size === 0}
-                className="bg-sage-600 hover:bg-sage-700 text-white border-0"
+                className="bg-green-600 hover:bg-green-700 text-white border-0"
                 size="lg"
               >
                 {isCompleting ? "Completing..." : "Complete Ritual"}
