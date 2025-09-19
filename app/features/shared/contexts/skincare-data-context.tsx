@@ -31,6 +31,7 @@ interface Routine {
   name: string
   type: string
   is_active: boolean
+  day_of_week: number | null // Added day_of_week field for day-specific routines
   created_at: string
   updated_at: string
   routine_steps: RoutineStep[]

@@ -49,9 +49,11 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
       // Find check-in for this date
       const checkIn = checkIns.find((c) => c.date === dateString)
 
-      // Get active routines
-      const morningRoutine = routines.find((r) => r.type === "morning" && r.is_active)
-      const eveningRoutine = routines.find((r) => r.type === "evening" && r.is_active)
+      // Map day index to day_of_week (Saturday=6, Sunday=0, Monday=1, etc.)
+      const dayOfWeek = i === 0 ? 6 : i - 1 // Saturday=6, Sunday=0, Monday=1, etc.
+
+      const morningRoutine = routines.find((r) => r.type === "morning" && r.is_active && r.day_of_week === dayOfWeek)
+      const eveningRoutine = routines.find((r) => r.type === "evening" && r.is_active && r.day_of_week === dayOfWeek)
 
       weekDays.push({
         date: dateString,

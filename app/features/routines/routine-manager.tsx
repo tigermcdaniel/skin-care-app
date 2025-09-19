@@ -248,113 +248,127 @@ export function RoutineManager({ routines, inventory, userId }: RoutineManagerPr
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {routines.map((routine) => (
-            <Card
-              key={routine.id}
-              className="border-0 bg-stone-50 shadow-sm hover:shadow-md transition-all duration-300 hover:bg-white"
-            >
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    {getRoutineIcon(routine.type)}
-                    <div>
-                      <CardTitle className="text-lg font-serif text-charcoal-800">{routine.name}</CardTitle>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge className="bg-green-100 text-green-800 border-green-200">{routine.type}</Badge>
-                        {!routine.is_active && (
-                          <Badge variant="secondary" className="bg-stone-100 text-stone-600">
-                            Inactive
-                          </Badge>
-                        )}
+          {routines
+            .sort((a, b) => {
+              // First sort by type: morning routines first, then evening routines
+              const typeOrder = { morning: 0, evening: 1, weekly: 2 }
+              const aTypeOrder = typeOrder[a.type as keyof typeof typeOrder] ?? 3
+              const bTypeOrder = typeOrder[b.type as keyof typeof typeOrder] ?? 3
+
+              if (aTypeOrder !== bTypeOrder) {
+                return aTypeOrder - bTypeOrder
+              }
+
+              // If same type, sort by name alphabetically
+              return a.name.localeCompare(b.name)
+            })
+            .map((routine) => (
+              <Card
+                key={routine.id}
+                className="border-0 bg-stone-50 shadow-sm hover:shadow-md transition-all duration-300 hover:bg-white"
+              >
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      {getRoutineIcon(routine.type)}
+                      <div>
+                        <CardTitle className="text-lg font-serif text-charcoal-800">{routine.name}</CardTitle>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge className="bg-green-100 text-green-800 border-green-200">{routine.type}</Badge>
+                          {!routine.is_active && (
+                            <Badge variant="secondary" className="bg-stone-100 text-stone-600">
+                              Inactive
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm text-charcoal-600">
-                  <p>{routine.routine_steps?.length || 0} steps</p>
-                  <p>Last updated: {new Date(routine.updated_at).toLocaleDateString()}</p>
-                </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm text-charcoal-600">
+                    <p>{routine.routine_steps?.length || 0} steps</p>
+                    <p>Last updated: {new Date(routine.updated_at).toLocaleDateString()}</p>
+                  </div>
 
-                {/* Preview of first few steps */}
-                {routine.routine_steps && routine.routine_steps.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700">Steps:</p>
-                    <div className="space-y-1">
-                      {routine.routine_steps.slice(0, 3).map((step, index) => (
-                        <div key={step.id} className="flex items-center gap-2 text-sm text-gray-600">
-                          <span className="flex-shrink-0 w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-xs">
-                            {index + 1}
-                          </span>
-                          <span className="truncate">{step.products.name}</span>
-                        </div>
-                      ))}
-                      {routine.routine_steps.length > 3 && (
-                        <p className="text-xs text-gray-500 ml-7">+{routine.routine_steps.length - 3} more steps</p>
-                      )}
+                  {/* Preview of first few steps */}
+                  {routine.routine_steps && routine.routine_steps.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Steps:</p>
+                      <div className="space-y-1">
+                        {routine.routine_steps.slice(0, 3).map((step, index) => (
+                          <div key={step.id} className="flex items-center gap-2 text-sm text-gray-600">
+                            <span className="flex-shrink-0 w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-xs">
+                              {index + 1}
+                            </span>
+                            <span className="truncate">{step.products.name}</span>
+                          </div>
+                        ))}
+                        {routine.routine_steps.length > 3 && (
+                          <p className="text-xs text-gray-500 ml-7">+{routine.routine_steps.length - 3} more steps</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    {/* Primary Actions */}
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => markRoutineComplete(routine.id, routine.name)}
+                        disabled={isLoading}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Mark Complete
+                      </Button>
+                      <Button
+                        onClick={() => router.push(`/routines/${routine.id}`)}
+                        variant="outline"
+                        className="flex-1 border-green-200 text-green-700 hover:bg-green-50"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Start Routine
+                      </Button>
+                    </div>
+
+                    {/* Secondary Actions */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => askChatAboutRoutine(routine)}
+                        className="flex-1 border-stone-200 text-charcoal-600 hover:bg-stone-50"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Ask Chat
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openBuilder(routine)}
+                        className="border-stone-200 text-charcoal-600 hover:bg-stone-50"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleRoutineActive(routine.id, routine.is_active)}
+                        disabled={isLoading}
+                        className={
+                          routine.is_active
+                            ? "text-rose-600 border-rose-200 hover:bg-rose-50"
+                            : "text-green-600 border-green-200 hover:bg-green-50"
+                        }
+                      >
+                        {routine.is_active ? "Pause" : "Activate"}
+                      </Button>
                     </div>
                   </div>
-                )}
-
-                <div className="space-y-3">
-                  {/* Primary Actions */}
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => markRoutineComplete(routine.id, routine.name)}
-                      disabled={isLoading}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Mark Complete
-                    </Button>
-                    <Button
-                      onClick={() => router.push(`/routines/${routine.id}`)}
-                      variant="outline"
-                      className="flex-1 border-green-200 text-green-700 hover:bg-green-50"
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Start Routine
-                    </Button>
-                  </div>
-
-                  {/* Secondary Actions */}
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => askChatAboutRoutine(routine)}
-                      className="flex-1 border-stone-200 text-charcoal-600 hover:bg-stone-50"
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />
-                      Ask Chat
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openBuilder(routine)}
-                      className="border-stone-200 text-charcoal-600 hover:bg-stone-50"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => toggleRoutineActive(routine.id, routine.is_active)}
-                      disabled={isLoading}
-                      className={
-                        routine.is_active
-                          ? "text-rose-600 border-rose-200 hover:bg-rose-50"
-                          : "text-green-600 border-green-200 hover:bg-green-50"
-                      }
-                    >
-                      {routine.is_active ? "Pause" : "Activate"}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
         </div>
       )}
     </div>

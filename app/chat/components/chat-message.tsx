@@ -248,7 +248,7 @@ const parseStructuredResponse = (content: string) => {
 }
 
 const parseCheckinActions = (content: string) => {
-  const checkinRegex = /\[CHECKIN_ACTION\]\{(.*?)\}\[\/CHECKIN_ACTION\]/g
+  const checkinRegex = /\[CHECKIN_ACTION\](\{.*?\})\[\/CHECKIN_ACTION\]/g
   const actions = []
   let match
 

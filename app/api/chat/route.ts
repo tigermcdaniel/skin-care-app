@@ -2,10 +2,17 @@ import { streamText } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { createClient } from "@/integrations/supabase/server"
 import { getWeekStartDate } from "@/utils/dateUtils" // Assuming a utility function to get the start of the week
+import { encodeImageFromUrl } from "@/utils/encodeImageFromUrl"
 
 export async function POST(req: Request) {
   try {
     const { messages, context } = await req.json()
+
+    if (!messages || !Array.isArray(messages)) {
+      console.error("[v0] Messages array is undefined or invalid:", messages)
+      return new Response("Invalid messages format", { status: 400 })
+    }
+
     const supabase = await createClient()
 
     const apiKey = process.env.OPENAI_API_KEY
@@ -22,6 +29,8 @@ export async function POST(req: Request) {
       return new Response("Unauthorized", { status: 401 })
     }
 
+    console.log(`[v0] Chat API - Fetching fresh data at ${new Date().toISOString()}`)
+
     // Get user profile and context
     const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
 
@@ -34,7 +43,6 @@ export async function POST(req: Request) {
       `)
       .eq("user_id", user.id)
 
-    // Get user's routines with enhanced weekly context
     const { data: routines } = await supabase
       .from("routines")
       .select(`
@@ -46,8 +54,29 @@ export async function POST(req: Request) {
       `)
       .eq("user_id", user.id)
       .eq("is_active", true)
+      .order("updated_at", { ascending: false })
 
+    console.log(`[v0] Chat API - Fetched ${routines?.length || 0} active routines at ${new Date().toISOString()}`)
     console.log("[v0] Chat API - Fetched routines:", JSON.stringify(routines, null, 2))
+
+    const routinesByDay = routines?.reduce(
+      (acc, routine) => {
+        const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][
+          routine.day_of_week
+        ]
+        if (!acc[dayName]) {
+          acc[dayName] = { morning: null, evening: null }
+        }
+        acc[dayName][routine.type] = routine
+        return acc
+      },
+      {} as Record<string, { morning: any; evening: any }>,
+    )
+
+    console.log(
+      `[v0] Chat API - Routines organized by day at ${new Date().toISOString()}:`,
+      JSON.stringify(routinesByDay, null, 2),
+    )
 
     const { data: weeklyCheckIns } = await supabase
       .from("daily_checkins")
@@ -120,45 +149,37 @@ ${contextualInfo}
 CURRENT INVENTORY (${inventory?.length || 0} products):
 ${inventory?.map((item) => `- ${item.products?.name} by ${item.products?.brand} (${item.products?.category}) - ${item.amount_remaining}% remaining`).join("\\n") || "No products in collection"}
 
-CURRENT ROUTINES:
+DAY-SPECIFIC ROUTINES:
 ${
-  routines
-    ?.map(
-      (routine) => `
-${routine.name} (${routine.type}):
-${routine.routine_steps?.map((step: any) => `  ${step.step_order}. ${step.products?.name} - ${step.amount} - ${step.instructions}`).join("\\n") || "  No steps defined"}
-`,
+  Object.entries(routinesByDay || {})
+    .map(
+      ([day, routines]) => `
+${day}:
+  Morning Routine: ${
+    routines.morning
+      ? routines.morning.routine_steps
+          ?.map((step: any) => `${step.step_order}. ${step.products?.name} - ${step.amount} - ${step.instructions}`)
+          .join(", ") || "No steps"
+      : "Not set"
+  }
+  Evening Routine: ${
+    routines.evening
+      ? routines.evening.routine_steps
+          ?.map((step: any) => `${step.step_order}. ${step.products?.name} - ${step.amount} - ${step.instructions}`)
+          .join(", ") || "No steps"
+      : "Not set"
+  }`,
     )
-    .join("\\n") || "No routines created yet"
+    .join("\\n") || "No day-specific routines created yet"
 }
 
 WEEKLY ROUTINE SCHEDULE CONTEXT:
-The user has access to a weekly routine view that shows their routines for each day of the week (Saturday through Friday). 
-${
-  routines?.find((r) => r.type === "morning" && r.is_active)
-    ? `Their active morning routine includes: ${
-        routines
-          .find((r) => r.type === "morning" && r.is_active)
-          ?.routine_steps?.map((step: any) => step.products?.name)
-          .join(", ") || "no steps"
-      }`
-    : "No active morning routine set"
-}
-${
-  routines?.find((r) => r.type === "evening" && r.is_active)
-    ? `Their active evening routine includes: ${
-        routines
-          .find((r) => r.type === "evening" && r.is_active)
-          ?.routine_steps?.map((step: any) => step.products?.name)
-          .join(", ") || "no steps"
-      }`
-    : "No active evening routine set"
-}
+The user has day-specific routines for each day of the week. Each day can have different morning and evening routines tailored to their needs. When users ask about specific days (like "Saturday's routine" or "what should I do on Monday"), reference the exact routine for that specific day.
 
 CURRENT WEEK COMPLETION STATUS:
 ${weeklyCheckIns?.map((checkin) => `- ${checkin.date}: Morning ${checkin.morning_routine_completed ? "✓" : "✗"}, Evening ${checkin.evening_routine_completed ? "✓" : "✗"}`).join("\\n") || "No check-ins this week"}
 
-When users ask about specific days (like "Saturday's routine" or "what should I do on Monday"), you can reference their active morning and evening routines, as these are repeated for each day of the week in their weekly schedule. You have full access to their routine information for any day they ask about.
+When users ask about specific days, you have access to their exact routine for that day. Each day of the week has its own unique morning and evening routine that can be different from other days.
 
 CORE RESPONSIBILITIES:
 1. **Routine Building**: Help users create, modify, and optimize their skincare routines
@@ -259,13 +280,13 @@ ADVANCED INTENT DETECTION RULES:
 ROUTINE INTERACTION RULES:
 - When users ask about their morning routine, ALWAYS provide the routine details AND include [ROUTINE_ACTION]{"type": "morning", "routine_name": "Morning Routine", "action": "complete"}[/ROUTINE_ACTION]
 - When users ask about their evening routine, ALWAYS provide the routine details AND include [ROUTINE_ACTION]{"type": "evening", "routine_name": "Evening Routine", "action": "complete"}[/ROUTINE_ACTION]
-- When users ask "what's my morning routine" or similar, respond with the full routine steps followed by the routine action
+- When users say "what's my morning routine" or similar, respond with the full routine steps followed by the routine action
 - When users mention completing a routine, offer the routine action button
 - The routine action creates a clickable "Mark Routine Complete" button in the chat
 
 CABINET INTERACTION RULES:
-- When users say they "ran out of" or "finished" a product, ALWAYS include [CABINET_ACTION]{"action": "remove", "product_name": "Product Name", "product_brand": "Brand", "reason": "ran out"}[/CABINET_ACTION]
-- When users say they "bought" or "got" a new product, ask for details then include [CABINET_ACTION]{"action": "add", "product_name": "Product Name", "product_brand": "Brand", "category": "Category", "amount_remaining": 100, "reason": "new purchase"}[/CABINET_ACTION]
+- When users say they "ran out of" or "finished" a product, ALWAYS include [CABINET_ACTION] with action "remove"
+- When users say they "bought" or "got" a new product, ask for details then include [CABINET_ACTION] with action "add"
 - When users mention a product is "expired" or "not working", offer removal with appropriate reason
 - Always confirm the exact product name and brand before suggesting cabinet actions
 - The cabinet actions create clickable "Remove from Cabinet" or "Add to Cabinet" buttons in the chat
@@ -315,27 +336,83 @@ CONVERSATION STYLE:
 - Always consider their skin type and concerns in recommendations
 - Make connections between their visible data and your advice
 - Be proactive in offering actions based on user statements
-
-PRODUCT RECOMMENDATION RULES:
-- You can recommend ANY skincare product from any brand, not just from a limited database
-- ALWAYS provide complete product information: name, brand, category, description, key ingredients, benefits
-- When recommending products, use the [PRODUCT] structured format with complete data
-- Include specific reasons why the product matches their skin type and concerns
-- Provide enough information for users to make informed decisions
-- When mentioning products inline in conversation, ALWAYS include the complete product name and brand
-- Example: "For dry skin, I recommend the CeraVe Daily Moisturizing Lotion" 
-- NEVER leave incomplete sentences like "I recommend the ." or blank spaces
-- If recommending multiple products, provide complete information for each one
-- CRITICAL: DO NOT recommend products that are already in the user's current inventory
-- Before suggesting any product, check the CURRENT INVENTORY section above to ensure the user doesn't already own it
-- If the user already has a product you were going to recommend, acknowledge this and suggest a different product or mention they can use what they already have
-- Example: "I see you already have CeraVe Moisturizer in your collection, which is perfect for your skin type. You might want to use it more consistently in your evening routine."
 `
+
+    const processedMessages = []
+    const imagesForLaterStorage: string[] = []
+
+    for (const message of messages) {
+      if (message.role === "user" && typeof message.content === "string" && message.content.includes("[IMAGE:")) {
+        const imageRegex = /\[IMAGE:\s*([^\]]+)\]/g
+        const imageRefs: string[] = []
+        let m
+        while ((m = imageRegex.exec(message.content)) !== null) {
+          imageRefs.push(m[1].trim())
+        }
+
+        const textContent = message.content.replace(imageRegex, "").trim()
+
+        // Keep originals for storage later
+        for (const ref of imageRefs) {
+          imagesForLaterStorage.push(ref)
+        }
+
+        const contentParts: Array<{ type: "text"; text: string } | { type: "image"; image: string }> = []
+
+        if (textContent) {
+          contentParts.push({ type: "text", text: textContent })
+        }
+
+        for (const ref of imageRefs) {
+          try {
+            if (ref.startsWith("data:image/")) {
+              // Already encoded - use directly
+              contentParts.push({ type: "image", image: ref })
+            } else if (/^https?:\/\//i.test(ref)) {
+              // Convert HTTPS to data URL on server
+              const { dataUrl } = await encodeImageFromUrl(ref)
+              contentParts.push({ type: "image", image: dataUrl })
+            } else if (ref.startsWith("blob:")) {
+              console.warn("[v0] Skipping blob: URL on server; encode on client or upload to storage first.")
+            } else {
+              console.warn("[v0] Unrecognized image ref, skipping:", ref)
+            }
+          } catch (err) {
+            console.error("[v0] Error encoding image:", err)
+          }
+        }
+
+        if (contentParts.length > 0) {
+          processedMessages.push({
+            role: "user",
+            content: contentParts,
+          })
+        } else {
+          processedMessages.push({
+            role: message.role,
+            content: [{ type: "text", text: textContent || "Please analyze these photos of my skin." }],
+          })
+        }
+      } else {
+        processedMessages.push({
+          role: message.role,
+          content: [{ type: "text", text: String(message.content ?? "") }],
+        })
+      }
+    }
+
+    console.log("[v0] About to send messages to AI model, count:", processedMessages.length)
+    console.log("[v0] Images collected for later storage:", imagesForLaterStorage.length)
+
+    const coreMessages = processedMessages.map((m) => ({
+      role: m.role,
+      content: Array.isArray(m.content) ? m.content : [{ type: "text", text: String(m.content ?? "") }],
+    }))
 
     const result = await streamText({
       model: openai("gpt-4o"),
       system: systemPrompt,
-      messages,
+      messages: coreMessages, // Pass directly without convertToModelMessages
       temperature: 0.7,
       maxOutputTokens: 8000,
     })

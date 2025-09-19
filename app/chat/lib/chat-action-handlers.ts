@@ -36,7 +36,7 @@ type AppointmentAction = {
   date: string
   time: string
   provider: string
-  location: string
+  location?: string // Optional location field
   notes?: string
 }
 
@@ -472,10 +472,9 @@ Benefits: ${product.benefits.join(", ")}`
       const { error } = await this.supabase.from("appointments").insert({
         user_id: user.id,
         treatment_type: action.treatment_type,
-        date: action.date,
-        time: action.time,
+        scheduled_date: `${action.date}T${action.time}:00.000Z`, // Combine date and time into timestamp
         provider: action.provider,
-        location: action.location,
+        location: action.location || null, // Optional location field
         notes: action.notes || "",
         status: "scheduled",
       })

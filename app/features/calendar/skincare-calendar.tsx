@@ -23,6 +23,7 @@ interface Routine {
       brand: string
     } | null
   }>
+  day_of_week: number // New property to indicate the day of the week
 }
 
 interface Appointment {
@@ -81,34 +82,36 @@ export function SkincareCalendar({
     const dateStr = date.toISOString().split("T")[0]
     const checkin = checkinsByDate[dateStr]
 
+    const dayOfWeek = date.getDay()
+
     const dayAppointments = safeAppointments.filter((apt) => apt.scheduled_date.split("T")[0] === dateStr)
 
     // For the selected date, show routines that were actually tracked/completed
-    // If it's today or future, show active routines
-    // If it's past and has check-in data, show routines that were tracked
+    // If it's today or future, show active routines for this specific day
+    // If it's past and has check-in data, show routines that were tracked for this day
     const today = new Date().toISOString().split("T")[0]
     let relevantRoutines: Routine[] = []
 
     if (dateStr >= today) {
-      // For today and future dates, show currently active routines
-      relevantRoutines = safeRoutines.filter((r) => r.is_active)
+      relevantRoutines = safeRoutines.filter((r) => r.is_active && r.day_of_week === dayOfWeek)
     } else if (checkin) {
-      // For past dates with check-in data, show routines that were tracked
       const trackedRoutines = safeRoutines.filter((routine) => {
+        // Only include routines for this specific day of week
+        if (routine.day_of_week !== dayOfWeek) return false
+
         if (routine.type === "morning" && checkin.morning_routine_completed) return true
         if (routine.type === "evening" && checkin.evening_routine_completed) return true
         return false
       })
 
-      // If no routines were completed but check-in exists, show what was available
+      // If no routines were completed but check-in exists, show what was available for this day
       if (trackedRoutines.length === 0) {
-        relevantRoutines = safeRoutines.filter((r) => r.is_active)
+        relevantRoutines = safeRoutines.filter((r) => r.is_active && r.day_of_week === dayOfWeek)
       } else {
         relevantRoutines = trackedRoutines
       }
     } else {
-      // For past dates without check-in data, show currently active routines as fallback
-      relevantRoutines = safeRoutines.filter((r) => r.is_active)
+      relevantRoutines = safeRoutines.filter((r) => r.is_active && r.day_of_week === dayOfWeek)
     }
 
     return {
@@ -140,15 +143,17 @@ export function SkincareCalendar({
   const renderDayContent = (date: Date) => {
     const events = getEventsForDate(date)
     const hasAppointment = events.appointments.length > 0
-    const hasCompletedRoutine =
-      events.checkin && (events.checkin.morning_routine_completed || events.checkin.evening_routine_completed)
+
+    const dateStr = date.toISOString().split("T")[0]
+
+    const hasCheckin = !!events.checkin
 
     return (
       <div className="relative w-full h-full flex flex-col items-center justify-center">
         <span className="text-sm">{date.getDate()}</span>
         <div className="flex gap-1 mt-1">
           {hasAppointment && <div className="w-2 h-2 bg-red-500 rounded-full"></div>}
-          {hasCompletedRoutine && <div className="w-2 h-2 bg-green-500 rounded-full"></div>}
+          {hasCheckin && <div className="w-2 h-2 bg-green-500 rounded-full"></div>}
         </div>
       </div>
     )
@@ -175,9 +180,8 @@ export function SkincareCalendar({
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-          <TabsTrigger value="routines">Ritual Schedule</TabsTrigger>
           <TabsTrigger value="appointments">Appointments</TabsTrigger>
         </TabsList>
 
@@ -221,7 +225,7 @@ export function SkincareCalendar({
                   <div className="mt-4 flex items-center gap-4 text-sm text-charcoal-600">
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span>Ritual Completed</span>
+                      <span>Check-ins Completed</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 bg-red-500 rounded-full"></div>
@@ -247,7 +251,7 @@ export function SkincareCalendar({
                 <CardContent className="space-y-4">
                   {/* Routines for selected date */}
                   <div className="space-y-3">
-                    <h4 className="font-medium text-charcoal-800">Daily Rituals</h4>
+                    <h4 className="font-medium text-charcoal-800">Daily Routines</h4>
                     {selectedDateEvents.routines.map((routine) => {
                       const status = getRoutineStatus(routine, selectedDate)
                       return (
@@ -306,14 +310,6 @@ export function SkincareCalendar({
                                   </p>
                                 )}
                               </div>
-                              <Button
-                                asChild
-                                variant="outline"
-                                size="sm"
-                                className="mt-2 border-green-200 text-green-700 hover:bg-green-50 bg-transparent"
-                              >
-                                <Link href={`/routines/${routine.id}`}>View Full Routine</Link>
-                              </Button>
                             </div>
                           )}
                         </div>
@@ -363,92 +359,6 @@ export function SkincareCalendar({
                 </CardContent>
               </Card>
             </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="routines" className="space-y-6">
-          <div className={`grid grid-cols-1 ${isFullScreen ? "md:grid-cols-2 lg:grid-cols-3" : "gap-4"} gap-6`}>
-            {/* Morning Routines */}
-            <Card className="border-0 shadow-sm bg-stone-50">
-              <CardHeader>
-                <CardTitle className="font-serif text-charcoal-800">Morning Rituals</CardTitle>
-                <CardDescription className="text-charcoal-600">Start your day with intention</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {morningRoutines.map((routine) => (
-                  <div key={routine.id} className="p-4 bg-white rounded-lg border border-stone-200">
-                    <h4 className="font-medium text-charcoal-800 mb-2">{routine.name}</h4>
-                    <div className="space-y-2">
-                      {routine.routine_steps.slice(0, isFullScreen ? 5 : 3).map((step) => (
-                        <div key={step.id} className="text-sm text-charcoal-600">
-                          {step.step_order}. {step.instructions || "No instructions"}
-                        </div>
-                      ))}
-                      {!isFullScreen && routine.routine_steps.length > 3 && (
-                        <p className="text-sm text-charcoal-500">+{routine.routine_steps.length - 3} more steps</p>
-                      )}
-                    </div>
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="mt-3 border-sage-200 text-sage-700 hover:bg-sage-50 bg-transparent"
-                    >
-                      <Link href={`/routines/${routine.id}`}>View Full Ritual</Link>
-                    </Button>
-                  </div>
-                ))}
-                {morningRoutines.length === 0 && (
-                  <div className="text-center py-8 text-charcoal-600">
-                    <p>No morning rituals configured</p>
-                    <Button asChild className="mt-4 bg-sage-600 hover:bg-sage-700 text-white">
-                      <Link href="/routines">Create Morning Ritual</Link>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Evening Routines */}
-            <Card className="border-0 shadow-sm bg-stone-50">
-              <CardHeader>
-                <CardTitle className="font-serif text-charcoal-800">Evening Rituals</CardTitle>
-                <CardDescription className="text-charcoal-600">End your day with care</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {eveningRoutines.map((routine) => (
-                  <div key={routine.id} className="p-4 bg-white rounded-lg border border-stone-200">
-                    <h4 className="font-medium text-charcoal-800 mb-2">{routine.name}</h4>
-                    <div className="space-y-2">
-                      {routine.routine_steps.slice(0, isFullScreen ? 5 : 3).map((step) => (
-                        <div key={step.id} className="text-sm text-charcoal-600">
-                          {step.step_order}. {step.instructions || "No instructions"}
-                        </div>
-                      ))}
-                      {!isFullScreen && routine.routine_steps.length > 3 && (
-                        <p className="text-sm text-charcoal-500">+{routine.routine_steps.length - 3} more steps</p>
-                      )}
-                    </div>
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="mt-3 border-sage-200 text-sage-700 hover:bg-sage-50 bg-transparent"
-                    >
-                      <Link href={`/routines/${routine.id}`}>View Full Ritual</Link>
-                    </Button>
-                  </div>
-                ))}
-                {eveningRoutines.length === 0 && (
-                  <div className="text-center py-8 text-charcoal-600">
-                    <p>No evening rituals configured</p>
-                    <Button asChild className="mt-4 bg-sage-600 hover:bg-sage-700 text-white">
-                      <Link href="/routines">Create Evening Ritual</Link>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
 

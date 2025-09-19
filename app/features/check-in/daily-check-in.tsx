@@ -161,16 +161,25 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
 
           const analysis = await analyzePhotosAndSuggestRoutine(photoUrls)
 
-          if (analysis && analysis.chatMessage) {
-            router.push(`/chat/new-session?prompt=${encodeURIComponent(analysis.chatMessage)}`)
-          } else {
-            router.push(
-              "/chat/new-session?prompt=I just completed my daily check-in with photos. Can you analyze my progress and suggest any routine adjustments?",
-            )
-          }
+          console.log("Check-in completed successfully with photos:", {
+            checkinData,
+            photoCount: photoUrls.length,
+            analysis: analysis ? "Analysis completed" : "Analysis failed",
+          })
+
+          setPhotoFiles([])
+          setPhotoPreviews([])
+          setPhotoNotes("")
+          setLightingConditions("natural")
+
+          alert("Check-in completed successfully! Your photos have been analyzed and saved.")
         }
       } else {
-        router.push("/chat/new-session?prompt=I completed my daily check-in. Can you help me with my skincare routine?")
+        console.log("Check-in completed successfully without photos:", checkinData)
+
+        setPhotoNotes("")
+
+        alert("Check-in completed successfully!")
       }
     } catch (error) {
       console.error("Error saving check-in:", error)
@@ -181,116 +190,121 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Camera className="w-5 h-5 text-sage-600" />
-            Daily Skin Check-In
-          </CardTitle>
-          <CardDescription>
-            Upload photos of your skin for AI analysis and personalized routine suggestions
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-sage-600" />
-              Progress Photos
-            </h3>
-            <p className="text-sm text-gray-600">
-              Take photos in good lighting for the most accurate analysis. Multiple angles help provide better insights.
-            </p>
-
+    <div className="min-h-screen overflow-y-auto pb-24">
+      <div className="max-w-2xl mx-auto space-y-6 p-4">
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Camera className="w-5 h-5 text-sage-600" />
+              Daily Skin Check-In
+            </CardTitle>
+            <CardDescription>
+              Upload photos of your skin for AI analysis and personalized routine suggestions
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
             <div className="space-y-4">
-              <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-sage-300 border-dashed rounded-lg cursor-pointer bg-sage-50 hover:bg-sage-100 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    {photoPreviews.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {photoPreviews.map((preview, index) => (
-                          <div key={index} className="relative">
-                            <img
-                              src={preview || PLACEHOLDER_IMAGE}
-                              alt={`Preview ${index + 1}`}
-                              className="h-24 w-full object-cover rounded-lg"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removePhoto(index)}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <>
-                        <Camera className="w-10 h-10 mb-4 text-sage-600" />
-                        <p className="mb-2 text-sm text-gray-700 font-medium">Upload your skin photos</p>
-                        <p className="text-xs text-gray-500 text-center px-4">
-                          AI will analyze your photos and suggest routine adjustments based on your current products
-                        </p>
-                      </>
-                    )}
-                  </div>
-                  <input type="file" className="hidden" accept="image/*" multiple onChange={handlePhotoChange} />
-                </label>
-              </div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-sage-600" />
+                Progress Photos
+              </h3>
+              <p className="text-sm text-gray-600">
+                Take photos in good lighting for the most accurate analysis. Multiple angles help provide better
+                insights.
+              </p>
 
-              {photoFiles.length > 0 && (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="photoNotes">Observations (Optional)</Label>
-                    <Textarea
-                      id="photoNotes"
-                      placeholder="Any specific concerns or observations about your skin today..."
-                      value={photoNotes}
-                      onChange={(e) => setPhotoNotes(e.target.value)}
-                      rows={2}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lighting">Lighting Conditions</Label>
-                    <select
-                      id="lighting"
-                      value={lightingConditions}
-                      onChange={(e) => setLightingConditions(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sage-500 focus:border-sage-500"
-                    >
-                      <option value="natural">Natural Light</option>
-                      <option value="indoor">Indoor Light</option>
-                      <option value="flash">Flash</option>
-                      <option value="mixed">Mixed Lighting</option>
-                    </select>
-                  </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-sage-300 border-dashed rounded-lg cursor-pointer bg-sage-50 hover:bg-sage-100 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      {photoPreviews.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {photoPreviews.map((preview, index) => (
+                            <div key={index} className="relative">
+                              <img
+                                src={preview || PLACEHOLDER_IMAGE}
+                                alt={`Preview ${index + 1}`}
+                                className="h-24 w-full object-cover rounded-lg"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removePhoto(index)}
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <>
+                          <Camera className="w-10 h-10 mb-4 text-sage-600" />
+                          <p className="mb-2 text-sm text-gray-700 font-medium">Upload your skin photos</p>
+                          <p className="text-xs text-gray-500 text-center px-4">
+                            AI will analyze your photos and suggest routine adjustments based on your current products
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <input type="file" className="hidden" accept="image/*" multiple onChange={handlePhotoChange} />
+                  </label>
                 </div>
-              )}
-            </div>
-          </div>
 
-          <Button
-            onClick={saveCheckIn}
-            disabled={isLoading || isAnalyzing}
-            className="w-full bg-sage-600 hover:bg-sage-700 text-white font-medium transition-colors duration-200 h-12"
-            size="lg"
-          >
-            {isAnalyzing ? (
-              <>
-                <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                Analyzing Photos & Generating Routine Suggestions...
-              </>
-            ) : isLoading ? (
-              "Saving..."
-            ) : photoFiles.length > 0 ? (
-              "Analyze & Get Personalized Routine Suggestions"
-            ) : (
-              "Complete Check-In"
-            )}
-          </Button>
-        </CardContent>
-      </Card>
+                {photoFiles.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="photoNotes">Observations (Optional)</Label>
+                      <Textarea
+                        id="photoNotes"
+                        placeholder="Any specific concerns or observations about your skin today..."
+                        value={photoNotes}
+                        onChange={(e) => setPhotoNotes(e.target.value)}
+                        rows={2}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lighting">Lighting Conditions</Label>
+                      <select
+                        id="lighting"
+                        value={lightingConditions}
+                        onChange={(e) => setLightingConditions(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-sage-500 focus:border-sage-500"
+                      >
+                        <option value="natural">Natural Light</option>
+                        <option value="indoor">Indoor Light</option>
+                        <option value="flash">Flash</option>
+                        <option value="mixed">Mixed Lighting</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="sticky bottom-4 bg-white/95 backdrop-blur-sm p-4 -mx-4 -mb-6 border-t border-gray-200">
+              <Button
+                onClick={saveCheckIn}
+                disabled={isLoading || isAnalyzing}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors duration-200 h-12 shadow-lg"
+                size="lg"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting
+                  </>
+                ) : isLoading ? (
+                  "Saving..."
+                ) : photoFiles.length > 0 ? (
+                  "Analyzing..."
+                ) : (
+                  "Complete Check-In"
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

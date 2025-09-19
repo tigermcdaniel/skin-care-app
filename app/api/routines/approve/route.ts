@@ -57,23 +57,37 @@ export async function POST(request: NextRequest) {
 
     await supabase.from("routines").update({ is_active: false }).eq("user_id", user.id)
 
-    const morningRoutineData = {
-      id: generateUUID(),
-      user_id: user.id,
-      name: "Morning Routine",
-      type: "morning",
-      is_active: true,
+    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    const routinesToCreate = []
+
+    for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+      const dayName = days[dayIndex]
+      const daySchedule = routineData.weeklySchedule[dayName]
+
+      if (daySchedule?.morning?.steps?.length > 0) {
+        routinesToCreate.push({
+          id: generateUUID(),
+          user_id: user.id,
+          name: `Morning Routine - ${dayName.charAt(0).toUpperCase() + dayName.slice(1)}`,
+          type: "morning",
+          day_of_week: dayIndex, // Sunday=0, Monday=1, etc.
+          is_active: true,
+        })
+      }
+
+      if (daySchedule?.evening?.steps?.length > 0) {
+        routinesToCreate.push({
+          id: generateUUID(),
+          user_id: user.id,
+          name: `Evening Routine - ${dayName.charAt(0).toUpperCase() + dayName.slice(1)}`,
+          type: "evening",
+          day_of_week: dayIndex,
+          is_active: true,
+        })
+      }
     }
 
-    const eveningRoutineData = {
-      id: generateUUID(),
-      user_id: user.id,
-      name: "Evening Routine",
-      type: "evening",
-      is_active: true,
-    }
-
-    const { error: routineError } = await supabase.from("routines").insert([morningRoutineData, eveningRoutineData])
+    const { error: routineError } = await supabase.from("routines").insert(routinesToCreate)
 
     if (routineError) {
       console.error("[v0] Error creating routines:", routineError)
@@ -116,53 +130,64 @@ export async function POST(request: NextRequest) {
       return createdProduct.id
     }
 
-    if (routineData.weeklySchedule.sunday?.morning?.steps?.length > 0) {
-      const morningSteps = []
+    for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+      const dayName = days[dayIndex]
+      const daySchedule = routineData.weeklySchedule[dayName]
 
-      for (let i = 0; i < routineData.weeklySchedule.sunday.morning.steps.length; i++) {
-        const step = routineData.weeklySchedule.sunday.morning.steps[i]
-        const productId = await createOrFindProduct(step.product_name, step.product_brand, step.category)
+      // Find the morning routine for this day
+      const morningRoutine = routinesToCreate.find((r) => r.type === "morning" && r.day_of_week === dayIndex)
 
-        morningSteps.push({
-          id: generateUUID(),
-          routine_id: morningRoutineData.id,
-          product_id: productId,
-          step_order: i + 1,
-          instructions: step.instructions || "",
-          amount: "As needed", // Default amount since it's not in the step data
-        })
+      if (morningRoutine && daySchedule?.morning?.steps?.length > 0) {
+        const morningSteps = []
+
+        for (let i = 0; i < daySchedule.morning.steps.length; i++) {
+          const step = daySchedule.morning.steps[i]
+          const productId = await createOrFindProduct(step.product_name, step.product_brand, step.category)
+
+          morningSteps.push({
+            id: generateUUID(),
+            routine_id: morningRoutine.id,
+            product_id: productId,
+            step_order: i + 1,
+            instructions: step.instructions || "",
+            amount: "As needed",
+          })
+        }
+
+        const { error: morningStepsError } = await supabase.from("routine_steps").insert(morningSteps)
+
+        if (morningStepsError) {
+          console.error("[v0] Error creating morning routine steps:", morningStepsError)
+          return NextResponse.json({ error: "Failed to create morning routine steps" }, { status: 500 })
+        }
       }
 
-      const { error: morningStepsError } = await supabase.from("routine_steps").insert(morningSteps)
+      // Find the evening routine for this day
+      const eveningRoutine = routinesToCreate.find((r) => r.type === "evening" && r.day_of_week === dayIndex)
 
-      if (morningStepsError) {
-        console.error("[v0] Error creating morning routine steps:", morningStepsError)
-        return NextResponse.json({ error: "Failed to create morning routine steps" }, { status: 500 })
-      }
-    }
+      if (eveningRoutine && daySchedule?.evening?.steps?.length > 0) {
+        const eveningSteps = []
 
-    if (routineData.weeklySchedule.sunday?.evening?.steps?.length > 0) {
-      const eveningSteps = []
+        for (let i = 0; i < daySchedule.evening.steps.length; i++) {
+          const step = daySchedule.evening.steps[i]
+          const productId = await createOrFindProduct(step.product_name, step.product_brand, step.category)
 
-      for (let i = 0; i < routineData.weeklySchedule.sunday.evening.steps.length; i++) {
-        const step = routineData.weeklySchedule.sunday.evening.steps[i]
-        const productId = await createOrFindProduct(step.product_name, step.product_brand, step.category)
+          eveningSteps.push({
+            id: generateUUID(),
+            routine_id: eveningRoutine.id,
+            product_id: productId,
+            step_order: i + 1,
+            instructions: step.instructions || "",
+            amount: "As needed",
+          })
+        }
 
-        eveningSteps.push({
-          id: generateUUID(),
-          routine_id: eveningRoutineData.id,
-          product_id: productId,
-          step_order: i + 1,
-          instructions: step.instructions || "",
-          amount: "As needed", // Default amount since it's not in the step data
-        })
-      }
+        const { error: eveningStepsError } = await supabase.from("routine_steps").insert(eveningSteps)
 
-      const { error: eveningStepsError } = await supabase.from("routine_steps").insert(eveningSteps)
-
-      if (eveningStepsError) {
-        console.error("[v0] Error creating evening routine steps:", eveningStepsError)
-        return NextResponse.json({ error: "Failed to create evening routine steps" }, { status: 500 })
+        if (eveningStepsError) {
+          console.error("[v0] Error creating evening routine steps:", eveningStepsError)
+          return NextResponse.json({ error: "Failed to create evening routine steps" }, { status: 500 })
+        }
       }
     }
 

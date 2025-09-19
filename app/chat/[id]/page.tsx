@@ -31,7 +31,12 @@ interface ChatMessage {
 
 type TabType = "routines" | "collection" | "calendar" | "treatments" | "checkin" | null
 
-const QUICK_COMMANDS = ["What's my morning routine?", "help me build a routine", "do i have any upcoming appointments?"]
+const QUICK_COMMANDS = [
+  "What's my morning routine?",
+  "Help me build a routine.",
+  "What is in my cabinet?",
+  "Do i have any upcoming appointments?",
+]
 
 function ChatConversationPageContent() {
   const params = useParams()
@@ -43,8 +48,8 @@ function ChatConversationPageContent() {
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showActionTriggers, setShowActionTriggers] = useState(true)
-  const [selectedImage, setSelectedImage] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [selectedImages, setSelectedImages] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>({} as HTMLDivElement)
   const supabase = createClient()
@@ -82,35 +87,44 @@ function ChatConversationPageContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if ((!input.trim() && !selectedImage) || isLoading) return
+    if ((!input.trim() && selectedImages.length === 0) || isLoading) return
 
     setShowActionTriggers(false)
 
-    let imageUrl = null
-    if (selectedImage) {
+    const imageUrls: string[] = []
+    if (selectedImages.length > 0) {
       try {
-        const formData = new FormData()
-        formData.append("file", selectedImage)
+        const uploadPromises = selectedImages.map(async (image) => {
+          const formData = new FormData()
+          formData.append("file", image)
 
-        const uploadResponse = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
+          const uploadResponse = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          })
+
+          if (uploadResponse.ok) {
+            const { url } = await uploadResponse.json()
+            return url
+          }
+          return null
         })
 
-        if (uploadResponse.ok) {
-          const { url } = await uploadResponse.json()
-          imageUrl = url
-        }
+        const results = await Promise.all(uploadPromises)
+        imageUrls.push(...results.filter((url) => url !== null))
       } catch (error) {
-        console.error("Error uploading image:", error)
+        console.error("Error uploading images:", error)
       }
     }
 
-    const messageContent = input.trim() || "I've shared an image with you."
+    const messageContent =
+      input.trim() || `I've shared ${selectedImages.length} image${selectedImages.length > 1 ? "s" : ""} with you.`
+    const imageText = imageUrls.length > 0 ? `\n\n${imageUrls.map((url) => `[IMAGE: ${url}]`).join("\n")}` : ""
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: imageUrl ? `${messageContent}\n\n[IMAGE: ${imageUrl}]` : messageContent,
+      content: messageContent + imageText,
       created_at: new Date().toISOString(),
     }
 
@@ -119,7 +133,7 @@ function ChatConversationPageContent() {
 
     const currentInput = input
     setInput("")
-    removeImage()
+    removeImages() // Updated function name
     setIsLoading(true)
 
     try {
@@ -477,20 +491,30 @@ function ChatConversationPageContent() {
   }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file && file.type.startsWith("image/")) {
-      setSelectedImage(file)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+    const files = Array.from(e.target.files || [])
+    if (files.length > 0) {
+      const validFiles = files.filter((file) => file.type.startsWith("image/"))
+
+      setSelectedImages((prev) => [...prev, ...validFiles])
+
+      validFiles.forEach((file) => {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setImagePreviews((prev) => [...prev, e.target?.result as string])
+        }
+        reader.readAsDataURL(file)
+      })
     }
   }
 
-  const removeImage = () => {
-    setSelectedImage(null)
-    setImagePreview(null)
+  const removeImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index))
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const removeImages = () => {
+    setSelectedImages([])
+    setImagePreviews([])
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
@@ -739,10 +763,10 @@ function ChatConversationPageContent() {
           setInput={setInput}
           onSubmit={handleSubmit}
           isLoading={isLoading}
-          selectedImage={selectedImage}
-          imagePreview={imagePreview}
+          selectedImages={selectedImages} // Updated prop name
+          imagePreviews={imagePreviews} // Updated prop name
           onImageSelect={handleImageSelect}
-          onRemoveImage={removeImage}
+          onRemoveImage={removeImage} // Updated prop name
           fileInputRef={fileInputRef}
           quickCommands={QUICK_COMMANDS}
           onQuickCommand={handleQuickCommand}

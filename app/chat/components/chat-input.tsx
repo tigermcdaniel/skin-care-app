@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { ImageIcon } from "lucide-react"
+import { ImageIcon, X } from "lucide-react"
 import { PLACEHOLDER_IMAGE } from "@/app/features/shared/constants/assets"
 
 interface ChatInputProps {
@@ -9,10 +9,10 @@ interface ChatInputProps {
   setInput: (input: string) => void
   onSubmit: (e: React.FormEvent) => void
   isLoading: boolean
-  selectedImage: File | null
-  imagePreview: string | null
+  selectedImages: File[]
+  imagePreviews: string[]
   onImageSelect: (e: React.ChangeEvent<HTMLInputElement>) => void
-  onRemoveImage: () => void
+  onRemoveImage: (index: number) => void
   fileInputRef: React.RefObject<HTMLInputElement | null>
   quickCommands?: string[]
   onQuickCommand?: (command: string) => void
@@ -24,8 +24,8 @@ export function ChatInput({
   setInput,
   onSubmit,
   isLoading,
-  selectedImage,
-  imagePreview,
+  selectedImages,
+  imagePreviews,
   onImageSelect,
   onRemoveImage,
   fileInputRef,
@@ -56,19 +56,25 @@ export function ChatInput({
         </div>
       )}
 
-      {imagePreview && (
-        <div className="mb-4 relative inline-block">
-          <img
-            src={imagePreview || PLACEHOLDER_IMAGE}
-            alt="Preview"
-            className="max-w-32 max-h-32 rounded-lg border border-stone-200"
-          />
-          <button
-            onClick={onRemoveImage}
-            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors"
-          >
-            ✕
-          </button>
+      {imagePreviews.length > 0 && (
+        <div className="mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {imagePreviews.map((preview, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={preview || PLACEHOLDER_IMAGE}
+                  alt={`Preview ${index + 1}`}
+                  className="w-full h-24 object-cover rounded-lg border border-stone-200"
+                />
+                <button
+                  onClick={() => onRemoveImage(index)}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors flex items-center justify-center"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -90,11 +96,11 @@ export function ChatInput({
           >
             <ImageIcon className="w-5 h-5" />
           </button>
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={onImageSelect} className="hidden" />
+          <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={onImageSelect} className="hidden" />
         </div>
         <button
           type="submit"
-          disabled={isLoading || (!input.trim() && !selectedImage)}
+          disabled={isLoading || (!input.trim() && selectedImages.length === 0)}
           className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Send
