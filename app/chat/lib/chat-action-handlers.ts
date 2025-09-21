@@ -469,12 +469,24 @@ Benefits: ${product.benefits.join(", ")}`
         return
       }
 
+      console.log("[v0] Original appointment action:", action)
+      console.log("[v0] Date string:", action.date)
+      console.log("[v0] Time string:", action.time)
+
+      const appointmentDate = new Date(`${action.date}T${action.time}:00`)
+      console.log("[v0] Created Date object:", appointmentDate)
+      console.log("[v0] Date object toString:", appointmentDate.toString())
+      console.log("[v0] Date object toLocaleDateString:", appointmentDate.toLocaleDateString())
+
+      const scheduledDate = appointmentDate.toISOString()
+      console.log("[v0] Final scheduled_date for database:", scheduledDate)
+
       const { error } = await this.supabase.from("appointments").insert({
         user_id: user.id,
         treatment_type: action.treatment_type,
-        scheduled_date: `${action.date}T${action.time}:00.000Z`, // Combine date and time into timestamp
+        scheduled_date: scheduledDate, // Use ISO string with timezone info
         provider: action.provider,
-        location: action.location || null, // Optional location field
+        location: action.location || null,
         notes: action.notes || "",
         status: "scheduled",
       })
@@ -483,6 +495,7 @@ Benefits: ${product.benefits.join(", ")}`
         console.error("Error adding appointment:", error)
         alert("Failed to add appointment. Please try again.")
       } else {
+        console.log("[v0] Appointment added successfully to database")
         alert("Appointment added successfully!")
         // Refresh data context
         window.dispatchEvent(new CustomEvent("refreshSkincareData"))

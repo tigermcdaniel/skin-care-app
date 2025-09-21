@@ -1,6 +1,7 @@
 "use client"
-import { Bot, CheckCircle, Stethoscope, ClipboardCheck, Minus, Plus, Calendar, Camera } from "lucide-react"
+import { Bot, CheckCircle, Stethoscope, ClipboardCheck, Minus, Plus, Calendar, Camera, Check } from "lucide-react"
 import { RoutineApprovalCard } from "@/app/features/routines/routine-approval-card"
+import { useState } from "react"
 
 const generateUUID = () => {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -277,6 +278,8 @@ export function ChatMessageComponent({
   isLoading,
   checkIns,
 }: ChatMessageProps) {
+  const [completedCabinetActions, setCompletedCabinetActions] = useState<Set<string>>(new Set())
+
   const handleApproveRoutine = async (suggestionId: string, routineData: WeeklyRoutineSuggestion) => {
     try {
       const response = await fetch("/api/routines/approve", {
@@ -312,6 +315,25 @@ export function ChatMessageComponent({
       }
     } catch (error) {
       console.error("Error denying routine:", error)
+    }
+  }
+
+  const handleCabinetActionWithConfirmation = async (action: CabinetAction, index: number) => {
+    const actionKey = `${action.product_name}-${action.product_brand}-${index}`
+
+    try {
+      await onCabinetAction(action)
+      setCompletedCabinetActions((prev) => new Set(prev).add(actionKey))
+
+      setTimeout(() => {
+        setCompletedCabinetActions((prev) => {
+          const newSet = new Set(prev)
+          newSet.delete(actionKey)
+          return newSet
+        })
+      }, 3000)
+    } catch (error) {
+      console.error("Cabinet action failed:", error)
     }
   }
 
@@ -374,7 +396,7 @@ export function ChatMessageComponent({
                   key={index}
                   suggestion={{
                     ...weeklyRoutine,
-                    id: generateUUID(), // Using generateUUID function instead of crypto.randomUUID()
+                    id: generateUUID(),
                     created_at: new Date().toISOString(),
                   }}
                   onApprove={(suggestionId) => handleApproveRoutine(suggestionId, weeklyRoutine)}
@@ -494,43 +516,56 @@ export function ChatMessageComponent({
 
           {cabinetActions.length > 0 && (
             <div className="space-y-2">
-              {cabinetActions.map((action, index) => (
-                <div key={index} className="bg-muted/50 rounded-lg p-3 border border-border">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-foreground">{action.product_name}</h4>
-                      <p className="text-sm text-muted-foreground mb-1">by {action.product_brand}</p>
-                      {action.category && <p className="text-xs text-muted-foreground mb-2">{action.category}</p>}
-                      <p className="text-xs text-muted-foreground italic">{action.reason}</p>
-                      {action.amount_remaining !== undefined && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Amount remaining: {action.amount_remaining}%
-                        </p>
-                      )}
+              {cabinetActions.map((action, index) => {
+                const actionKey = `${action.product_name}-${action.product_brand}-${index}`
+                const isCompleted = completedCabinetActions.has(actionKey)
+
+                return (
+                  <div key={index} className="bg-muted/50 rounded-lg p-3 border border-border">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-foreground">{action.product_name}</h4>
+                        <p className="text-sm text-muted-foreground mb-1">by {action.product_brand}</p>
+                        {action.category && <p className="text-xs text-muted-foreground mb-2">{action.category}</p>}
+                        <p className="text-xs text-muted-foreground italic">{action.reason}</p>
+                        {action.amount_remaining !== undefined && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Amount remaining: {action.amount_remaining}%
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleCabinetActionWithConfirmation(action, index)}
+                        disabled={isCompleted}
+                        className={`ml-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-2 self-end ${
+                          isCompleted
+                            ? "bg-green-600 text-white cursor-default"
+                            : action.action === "remove"
+                              ? "bg-red-600 hover:bg-red-700 text-white"
+                              : "bg-green-600 hover:bg-green-700 text-white"
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            <span>Added</span>
+                          </>
+                        ) : action.action === "remove" ? (
+                          <>
+                            <Minus className="w-4 h-4" />
+                            <span>Remove from Cabinet</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4" />
+                            <span>Add to Cabinet</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => onCabinetAction(action)}
-                      className={`ml-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 self-end ${
-                        action.action === "remove"
-                          ? "bg-red-600 hover:bg-red-700 text-white"
-                          : "bg-green-600 hover:bg-green-700 text-white"
-                      }`}
-                    >
-                      {action.action === "remove" ? (
-                        <>
-                          <Minus className="w-4 h-4" />
-                          <span>Remove from Cabinet</span>
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4" />
-                          <span>Add to Cabinet</span>
-                        </>
-                      )}
-                    </button>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 

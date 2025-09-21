@@ -5,7 +5,7 @@ import { createClient } from "@/integrations/supabase/client"
 import { Button } from "@/app/features/shared/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
 import { Badge } from "@/app/features/shared/ui/badge"
-import { Calendar, Clock, MapPin, Star, CheckCircle, Expand } from "lucide-react"
+import { Calendar, Clock, MapPin, Star, CheckCircle, Expand, Trash2 } from "lucide-react"
 
 interface Treatment {
   id: string
@@ -78,28 +78,23 @@ export function TreatmentsTab({ onExpand, isFullScreen = false }: TreatmentsTabP
     }
   }
 
-  const approveAppointment = async (appointmentId: string) => {
+  const deleteAppointment = async (appointmentId: string) => {
     try {
-      await supabase.from("appointments").update({ status: "scheduled" }).eq("id", appointmentId)
+      await supabase.from("appointments").delete().eq("id", appointmentId)
       loadData()
     } catch (error) {
-      console.error("Error approving appointment:", error)
-    }
-  }
-
-  const completeAppointment = async (appointmentId: string) => {
-    try {
-      await supabase.from("appointments").update({ status: "completed" }).eq("id", appointmentId)
-      loadData()
-    } catch (error) {
-      console.error("Error completing appointment:", error)
+      console.error("Error deleting appointment:", error)
     }
   }
 
   const upcomingAppointments = appointments.filter(
     (apt) => apt.status === "scheduled" && new Date(apt.scheduled_date) >= new Date(),
   )
-  const completedAppointments = appointments.filter((apt) => apt.status === "completed")
+
+  const pastAppointments = appointments.filter(
+    (apt) => (apt.status === "scheduled" && new Date(apt.scheduled_date) < new Date()) || apt.status === "completed",
+  )
+
   const pastTreatments = treatments.slice(0, isFullScreen ? 10 : 3)
 
   if (loading) {
@@ -192,8 +187,13 @@ export function TreatmentsTab({ onExpand, isFullScreen = false }: TreatmentsTabP
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => completeAppointment(appointment.id)}>
-                        Complete
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteAppointment(appointment.id)}
+                        className="h-7 w-7 p-0 text-stone-400 hover:text-red-500 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   </CardContent>
@@ -205,21 +205,21 @@ export function TreatmentsTab({ onExpand, isFullScreen = false }: TreatmentsTabP
 
         {activeView === "history" && (
           <>
-            {completedAppointments.length === 0 && pastTreatments.length === 0 ? (
+            {pastAppointments.length === 0 && pastTreatments.length === 0 ? (
               <div className="text-center py-8 text-stone-500">
                 <Clock className="w-8 h-8 mx-auto mb-2 text-stone-400" />
                 <p className="text-sm">No treatment history</p>
               </div>
             ) : (
               <>
-                {completedAppointments.slice(0, isFullScreen ? 10 : 3).map((appointment) => (
+                {pastAppointments.slice(0, isFullScreen ? 10 : 3).map((appointment) => (
                   <Card key={`appointment-${appointment.id}`} className="border-l-4 border-l-blue-500">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-medium">{appointment.treatment_type}</CardTitle>
                         <Badge variant="outline" className="text-xs text-blue-600 border-blue-600">
                           <CheckCircle className="w-3 h-3 mr-1" />
-                          Completed
+                          {appointment.status === "completed" ? "Completed" : "Past"}
                         </Badge>
                       </div>
                       <CardDescription className="text-xs">

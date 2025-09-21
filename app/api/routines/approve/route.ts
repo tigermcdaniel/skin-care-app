@@ -57,12 +57,14 @@ export async function POST(request: NextRequest) {
 
     await supabase.from("routines").update({ is_active: false }).eq("user_id", user.id)
 
-    const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    const days = ["saturday", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday"]
     const routinesToCreate = []
 
     for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
       const dayName = days[dayIndex]
       const daySchedule = routineData.weeklySchedule[dayName]
+
+      const dayOfWeek = dayIndex === 0 ? 6 : dayIndex - 1
 
       if (daySchedule?.morning?.steps?.length > 0) {
         routinesToCreate.push({
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
           user_id: user.id,
           name: `Morning Routine - ${dayName.charAt(0).toUpperCase() + dayName.slice(1)}`,
           type: "morning",
-          day_of_week: dayIndex, // Sunday=0, Monday=1, etc.
+          day_of_week: dayOfWeek, // Saturday=6, Sunday=0, Monday=1, etc.
           is_active: true,
         })
       }
@@ -81,7 +83,7 @@ export async function POST(request: NextRequest) {
           user_id: user.id,
           name: `Evening Routine - ${dayName.charAt(0).toUpperCase() + dayName.slice(1)}`,
           type: "evening",
-          day_of_week: dayIndex,
+          day_of_week: dayOfWeek,
           is_active: true,
         })
       }
@@ -134,8 +136,10 @@ export async function POST(request: NextRequest) {
       const dayName = days[dayIndex]
       const daySchedule = routineData.weeklySchedule[dayName]
 
+      const dayOfWeek = dayIndex === 0 ? 6 : dayIndex - 1
+
       // Find the morning routine for this day
-      const morningRoutine = routinesToCreate.find((r) => r.type === "morning" && r.day_of_week === dayIndex)
+      const morningRoutine = routinesToCreate.find((r) => r.type === "morning" && r.day_of_week === dayOfWeek)
 
       if (morningRoutine && daySchedule?.morning?.steps?.length > 0) {
         const morningSteps = []
@@ -163,7 +167,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Find the evening routine for this day
-      const eveningRoutine = routinesToCreate.find((r) => r.type === "evening" && r.day_of_week === dayIndex)
+      const eveningRoutine = routinesToCreate.find((r) => r.type === "evening" && r.day_of_week === dayOfWeek)
 
       if (eveningRoutine && daySchedule?.evening?.steps?.length > 0) {
         const eveningSteps = []

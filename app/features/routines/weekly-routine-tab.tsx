@@ -29,35 +29,28 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
   const [editMode, setEditMode] = useState<Record<string, boolean>>({}) // Track edit mode per routine
   const [editedSteps, setEditedSteps] = useState<Record<string, any[]>>({}) // Track edited steps per routine
 
-  // Get current week (Saturday to Sunday)
+  // Get current day and next 5 days
   const getWeekDays = () => {
     const today = new Date()
-    const currentDay = today.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-    const daysFromSaturday = currentDay === 0 ? 1 : currentDay + 1 // Days since last Saturday
-
-    const saturday = new Date(today)
-    saturday.setDate(today.getDate() - daysFromSaturday)
-
     const weekDays: DayRoutine[] = []
-    const dayNames = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(saturday)
-      date.setDate(saturday.getDate() + i)
+    // Show today + next 5 days (6 days total)
+    for (let i = 0; i < 6; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + i)
       const dateString = date.toISOString().split("T")[0]
+      const dayOfWeek = date.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
       // Find check-in for this date
       const checkIn = checkIns.find((c) => c.date === dateString)
-
-      // Map day index to day_of_week (Saturday=6, Sunday=0, Monday=1, etc.)
-      const dayOfWeek = i === 0 ? 6 : i - 1 // Saturday=6, Sunday=0, Monday=1, etc.
 
       const morningRoutine = routines.find((r) => r.type === "morning" && r.is_active && r.day_of_week === dayOfWeek)
       const eveningRoutine = routines.find((r) => r.type === "evening" && r.is_active && r.day_of_week === dayOfWeek)
 
       weekDays.push({
         date: dateString,
-        dayName: dayNames[i],
+        dayName: dayNames[dayOfWeek],
         morningRoutine,
         eveningRoutine,
         morningCompleted: checkIn?.morning_routine_completed || false,
@@ -232,7 +225,7 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-serif font-semibold text-charcoal-900">Weekly Routine Schedule</h2>
-          <p className="text-sm text-charcoal-600">Saturday to Sunday • Track and customize your daily routines</p>
+          <p className="text-sm text-charcoal-600">Today + Next 5 Days • Track and customize your daily routines</p>
         </div>
         {!isFullScreen && onExpand && (
           <Button
@@ -262,7 +255,7 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
                         <Badge className="ml-2 bg-green-100 text-green-800 border-green-200 text-xs">Today</Badge>
                       )}
                     </CardTitle>
-                    <p className="text-sm text-charcoal-600">{new Date(day.date).toLocaleDateString()}</p>
+                    <p className="text-sm text-charcoal-600">{formatDateDisplay(day.date)}</p>
                   </div>
                 </div>
                 <Button
@@ -578,4 +571,15 @@ const isToday = (dateString: string) => {
 const isPastDate = (dateString: string) => {
   const today = new Date().toISOString().split("T")[0]
   return dateString < today
+}
+
+const formatDateDisplay = (dateString: string) => {
+  const [year, month, day] = dateString.split("-")
+  const date = new Date(Number.parseInt(year), Number.parseInt(month) - 1, Number.parseInt(day))
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "numeric",
+    day: "numeric",
+    year: "2-digit",
+  })
 }
