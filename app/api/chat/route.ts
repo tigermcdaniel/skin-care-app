@@ -1,9 +1,57 @@
+/**
+ * Chat API Route Handler
+ * 
+ * Handles AI-powered chat conversations with the skincare advisor.
+ * Provides context-aware responses based on user's skincare data including:
+ * - User profile and skin type
+ * - Current product inventory
+ * - Active routines and progress
+ * - Recent check-ins and goals
+ * 
+ * Features:
+ * - Streams responses in real-time
+ * - Processes images for skin analysis
+ * - Maintains conversation context
+ * - Provides personalized skincare advice
+ */
+
 import { streamText } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { createClient } from "@/integrations/supabase/server"
 import { getWeekStartDate } from "@/utils/dateUtils" // Assuming a utility function to get the start of the week
 import { encodeImageFromUrl } from "@/utils/encodeImageFromUrl"
-
+/**
+ * Handles POST requests to the chat API endpoint for AI-powered skincare conversations
+ * 
+ * This endpoint processes user messages and generates context-aware responses from the AI skincare advisor.
+ * It fetches comprehensive user data including routines, inventory, check-ins, and goals to provide
+ * personalized skincare advice. The response is streamed in real-time for better user experience.
+ * 
+ * Request Processing:
+ * - Validates message format and user authentication
+ * - Fetches user's complete skincare profile from Supabase
+ * - Retrieves active routines, product inventory, recent check-ins, and goals
+ * - Processes any uploaded images for skin analysis
+ * - Constructs comprehensive context for AI model
+ * - Streams AI response in real-time chunks
+ * 
+ * Context Data Retrieved:
+ * - User profile information and skin type
+ * - Active routines with completion status
+ * - Product inventory with usage tracking
+ * - Recent check-ins with photos and notes
+ * - Current goals and progress tracking
+ * - Appointment history and upcoming treatments
+ * 
+ * @param {Request} req - HTTP request object containing messages array, context data, and optional images
+ * @returns {Promise<Response>} Streaming text response from OpenAI GPT-4o model with skincare advice
+ * 
+ * @throws {Error} When messages array is missing or invalid format
+ * @throws {Error} When OpenAI API key is not configured
+ * @throws {Error} When user authentication fails or user not found
+ * @throws {Error} When database query fails to retrieve user data
+ * @throws {Error} When AI model fails to generate response or exceeds rate limits
+ */
 export async function POST(req: Request) {
   try {
     const { messages, context } = await req.json()

@@ -1,8 +1,54 @@
+/**
+ * Photo Analysis API Route Handler
+ * 
+ * Analyzes user-uploaded skin photos using AI to provide:
+ * - Skin condition assessment and rating
+ * - Routine effectiveness analysis
+ * - Product recommendations based on current inventory
+ * - Specific routine modification suggestions
+ * - Progress tracking insights
+ * 
+ * Uses Groq's Llama model for comprehensive skin analysis and
+ * provides structured JSON responses with actionable recommendations.
+ */
+
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/integrations/supabase/server"
 import { groq } from "@ai-sdk/groq"
 import { generateText } from "ai"
-
+/**
+ * Handles POST requests to the photo analysis API endpoint for AI-powered skin analysis
+ * 
+ * This endpoint processes user-uploaded skin photos using Groq's Llama model to provide
+ * comprehensive skin analysis and personalized skincare recommendations. It analyzes
+ * skin conditions, evaluates routine effectiveness, and suggests product improvements
+ * based on the user's current inventory and skincare goals.
+ * 
+ * Analysis Capabilities:
+ * - Skin condition assessment and rating (1-10 scale)
+ * - Routine effectiveness analysis and recommendations
+ * - Product recommendations based on current inventory
+ * - Specific routine modification suggestions
+ * - Progress tracking insights and trends
+ * - Lighting condition analysis for photo quality
+ * 
+ * Data Processing:
+ * - Validates photo URLs and accessibility
+ * - Fetches user's complete skincare profile
+ * - Retrieves current routines and product inventory
+ * - Analyzes skin conditions using AI vision model
+ * - Generates structured recommendations
+ * - Stores analysis results for progress tracking
+ * 
+ * @param {NextRequest} request - HTTP request object containing photo URLs, user ID, notes, and lighting conditions
+ * @returns {Promise<NextResponse>} JSON response with detailed skin analysis, recommendations, and actionable insights
+ * 
+ * @throws {Error} When photo URLs are missing, invalid, or inaccessible
+ * @throws {Error} When user ID is missing or user not found in database
+ * @throws {Error} When Groq AI model fails to analyze photos or exceeds rate limits
+ * @throws {Error} When database operations fail to retrieve user data or store results
+ * @throws {Error} When photo processing fails due to format or size issues
+ */
 export async function POST(request: NextRequest) {
   try {
     const { photoUrls, userId, notes, lightingConditions } = await request.json()

@@ -1,3 +1,15 @@
+/**
+ * GlobalNavigation Component
+ * 
+ * Main navigation component for the Skincare Sanctuary application.
+ * Features:
+ * - Primary navigation links to all major sections
+ * - Quick action buttons for common tasks
+ * - User authentication and logout functionality
+ * - Responsive design for mobile and desktop
+ * - Active state management for current page
+ */
+
 "use client"
 
 import Link from "next/link"
@@ -57,6 +69,36 @@ const quickActions = [
   },
 ]
 
+/**
+ * GlobalNavigation Component
+ * 
+ * Main navigation component for the Skincare Sanctuary application, providing comprehensive
+ * navigation access to all major features and sections. This component serves as the primary
+ * navigation hub, offering intuitive access to chat, routines, inventory, progress tracking,
+ * and user management features with a clean, responsive design.
+ * 
+ * Navigation Features:
+ * - Primary navigation links to all major sections (Chat, Routines, Inventory, Progress, etc.)
+ * - Quick action buttons for common tasks (New Chat, Add Product, etc.)
+ * - User authentication and logout functionality
+ * - Responsive design optimized for mobile and desktop
+ * - Active state management for current page highlighting
+ * 
+ * User Experience:
+ * - Clean, organized navigation structure
+ * - Intuitive iconography for easy recognition
+ * - Quick access to frequently used features
+ * - Seamless logout functionality with proper session management
+ * - Mobile-friendly responsive design
+ * 
+ * Brand Integration:
+ * - Consistent branding with logo and title
+ * - Professional color scheme and typography
+ * - Clear visual hierarchy for navigation elements
+ * - Accessible design following web standards
+ * 
+ * @returns {JSX.Element} JSX element containing the complete navigation bar with all features
+ */
 export function GlobalNavigation() {
   const pathname = usePathname()
   const router = useRouter()

@@ -1,3 +1,16 @@
+/**
+ * Chat Conversation Page
+ * 
+ * Main chat interface for AI-powered skincare conversations.
+ * Features include:
+ * - Real-time streaming chat with AI advisor
+ * - Image upload and analysis capabilities
+ * - Tabbed interface for routines, inventory, calendar, treatments, and check-ins
+ * - Resizable sidebar panels
+ * - Action handlers for routine completion, product management, and goal setting
+ * - Context-aware AI responses based on user's skincare data
+ */
+
 "use client"
 
 import type React from "react"
@@ -38,6 +51,38 @@ const QUICK_COMMANDS = [
   "Do i have any upcoming appointments?",
 ]
 
+/**
+ * ChatConversationPageContent Component
+ * 
+ * Main content component for the AI-powered skincare chat interface, providing a comprehensive
+ * platform for users to interact with their AI skincare advisor. This component manages
+ * real-time conversations, image analysis, and integrates with all major skincare features
+ * including routines, inventory, calendar, treatments, and progress tracking.
+ * 
+ * Core Functionality:
+ * - Real-time streaming chat with AI skincare advisor
+ * - Image upload and AI-powered skin analysis
+ * - Tabbed interface for routines, inventory, calendar, treatments, and check-ins
+ * - Resizable sidebar panels for optimal user experience
+ * - Action handlers for routine completion, product management, and goal setting
+ * - Context-aware AI responses based on user's complete skincare profile
+ * 
+ * State Management:
+ * - Message state management with streaming support
+ * - Image upload and processing with progress tracking
+ * - Tab navigation and panel resizing
+ * - Real-time data synchronization with Supabase
+ * - Action handling for various skincare operations
+ * 
+ * User Experience:
+ * - Intuitive chat interface with message history
+ * - Drag-and-drop image upload for skin analysis
+ * - Organized tabbed interface for different features
+ * - Responsive design for mobile and desktop
+ * - Quick action buttons for common tasks
+ * 
+ * @returns {JSX.Element} The main chat interface component with full skincare functionality
+ */
 function ChatConversationPageContent() {
   const params = useParams()
   const searchParams = useSearchParams()
@@ -841,6 +886,14 @@ function ChatConversationPageContent() {
   )
 }
 
+/**
+ * ChatConversationPage Component
+ * 
+ * Root component that wraps the chat interface with the SkincareDataProvider.
+ * This ensures all child components have access to the centralized skincare data context.
+ * 
+ * @returns {JSX.Element} JSX element with provider and content components
+ */
 export default function ChatConversationPage() {
   return (
     <SkincareDataProvider>

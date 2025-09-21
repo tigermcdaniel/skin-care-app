@@ -1,3 +1,41 @@
+/**
+ * Progress Dashboard Component
+ * 
+ * Comprehensive progress tracking dashboard for skincare journey management, providing
+ * users with detailed insights into their skincare progress, goal achievement, and
+ * visual documentation of their skin transformation over time.
+ * 
+ * Key Features:
+ * - Visual progress tracking with photo documentation
+ * - Goal management and achievement monitoring
+ * - Progress charts and analytics visualization
+ * - Daily check-in tracking and mood monitoring
+ * - Skin condition rating and trend analysis
+ * - Routine completion statistics and insights
+ * 
+ * Progress Tracking:
+ * - Photo gallery for visual progress documentation
+ * - Progress charts showing trends over time
+ * - Goal tracking with completion status
+ * - Routine adherence monitoring
+ * - Skin condition rating trends
+ * - Mood and lifestyle factor tracking
+ * 
+ * Data Visualization:
+ * - Interactive charts and graphs
+ * - Progress indicators and completion rates
+ * - Trend analysis and pattern recognition
+ * - Goal achievement visualization
+ * - Photo comparison and timeline views
+ * 
+ * User Experience:
+ * - Intuitive dashboard with clear metrics
+ * - Visual progress indicators and charts
+ * - Easy photo upload and organization
+ * - Goal setting and tracking interface
+ * - Responsive design for all devices
+ */
+
 "use client"
 
 import { useState } from "react"
@@ -57,6 +95,43 @@ interface ProgressDashboardProps {
   userId: string
 }
 
+/**
+ * ProgressDashboard Component
+ * 
+ * Main progress tracking dashboard that provides comprehensive insights into the user's
+ * skincare journey, including visual progress documentation, goal achievement tracking,
+ * and detailed analytics for routine adherence and skin condition improvements.
+ * 
+ * Core Functionality:
+ * - Displays progress photos with timeline organization
+ * - Shows progress charts and trend analysis
+ * - Manages goal setting and achievement tracking
+ * - Tracks routine completion rates and statistics
+ * - Provides visual indicators for progress milestones
+ * - Handles photo upload and organization
+ * 
+ * Data Processing:
+ * - Calculates routine completion rates and statistics
+ * - Processes progress photos with metadata
+ * - Tracks goal achievement and progress
+ * - Analyzes skin condition trends over time
+ * - Manages check-in data and mood tracking
+ * - Provides insights and recommendations
+ * 
+ * User Interface:
+ * - Tabbed interface for different progress views
+ * - Visual progress indicators and charts
+ * - Photo gallery with timeline organization
+ * - Goal management interface
+ * - Responsive design for all devices
+ * 
+ * @param {Object} props - Component props
+ * @param {ProgressPhoto[]} props.photos - Array of progress photos with metadata
+ * @param {DailyCheckin[]} props.checkins - Array of daily check-in records
+ * @param {Goal[]} props.goals - Array of user goals and objectives
+ * @param {string} props.userId - User ID for data filtering
+ * @returns {JSX.Element} Complete progress tracking dashboard
+ */
 export function ProgressDashboard({ photos, checkins, goals, userId }: ProgressDashboardProps) {
   const [activeTab, setActiveTab] = useState("overview")
 

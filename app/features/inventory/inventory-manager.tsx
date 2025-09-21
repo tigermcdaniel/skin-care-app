@@ -1,3 +1,36 @@
+/**
+ * Inventory Manager Component
+ * 
+ * Comprehensive inventory management system for skincare products, providing users with
+ * complete control over their product collection, usage tracking, and expiration monitoring.
+ * This component handles product lifecycle management, inventory optimization, and
+ * provides intelligent insights for skincare routine planning.
+ * 
+ * Key Features:
+ * - Product inventory management with detailed product information
+ * - Usage tracking and amount remaining monitoring
+ * - Expiration date tracking with visual alerts
+ * - Product categorization and organization
+ * - Purchase history and cost tracking
+ * - Notes and personal annotations for products
+ * 
+ * Inventory Management:
+ * - Add, edit, and remove products from inventory
+ * - Track product usage and remaining amounts
+ * - Monitor expiration dates with visual indicators
+ * - Organize products by category and subcategory
+ * - Manage product notes and personal preferences
+ * - Generate usage reports and insights
+ * 
+ * User Experience:
+ * - Intuitive product management interface
+ * - Visual progress indicators for product usage
+ * - Expiration alerts and warnings
+ * - Quick access to product details and actions
+ * - Responsive design for mobile and desktop
+ * - Search and filter capabilities for large inventories
+ */
+
 "use client"
 
 import { useState } from "react"
@@ -49,6 +82,40 @@ interface InventoryManagerProps {
   userId: string
 }
 
+/**
+ * InventoryManager Component
+ * 
+ * Main inventory management component that handles the complete lifecycle of skincare products
+ * in the user's collection. This component provides comprehensive product management,
+ * usage tracking, and inventory optimization features for effective skincare routine planning.
+ * 
+ * Core Functionality:
+ * - Displays complete product inventory with detailed information
+ * - Manages product editing, updating, and deletion operations
+ * - Tracks product usage and remaining amounts
+ * - Monitors expiration dates with visual alerts
+ * - Handles product notes and personal annotations
+ * - Provides inventory insights and usage analytics
+ * 
+ * Data Management:
+ * - Processes inventory data with product relationships
+ * - Manages product lifecycle from purchase to expiration
+ * - Tracks usage patterns and consumption rates
+ * - Handles product categorization and organization
+ * - Provides real-time inventory updates
+ * 
+ * User Interface:
+ * - Intuitive product management interface
+ * - Visual progress indicators for product usage
+ * - Expiration alerts and warnings
+ * - Quick access to product actions and details
+ * - Responsive design for all device sizes
+ * 
+ * @param {Object} props - Component props
+ * @param {InventoryItem[]} props.inventory - Array of inventory items with product details
+ * @param {string} props.userId - User ID for data filtering and operations
+ * @returns {JSX.Element} Complete inventory management interface
+ */
 export function InventoryManager({ inventory, userId }: InventoryManagerProps) {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
   const [isLoading, setIsLoading] = useState(false)

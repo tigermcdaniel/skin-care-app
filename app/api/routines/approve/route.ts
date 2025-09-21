@@ -1,9 +1,53 @@
+/**
+ * Routine Approval API Route Handler
+ * 
+ * Handles the approval and creation of AI-generated weekly skincare routines.
+ * Features:
+ * - Converts weekly routine suggestions into day-specific routines
+ * - Creates products and routine steps automatically
+ * - Deactivates existing routines before creating new ones
+ * - Supports both morning and evening routines for each day
+ * - Generates unique IDs for all created entities
+ */
+
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
 import { generateUUID } from "@/lib/uuid"
-
+/**
+ * Handles POST requests to the routine approval API endpoint for AI-generated skincare routines
+ * 
+ * This endpoint processes the approval of AI-generated weekly skincare routines, converting
+ * them into day-specific routines with detailed steps and product recommendations. It
+ * automatically creates products, routine steps, and manages the transition from
+ * suggested routines to active user routines.
+ * 
+ * Approval Process:
+ * - Validates user authentication and routine suggestion data
+ * - Deactivates existing routines to prevent conflicts
+ * - Creates new products based on AI recommendations
+ * - Generates day-specific routines (morning/evening for each day)
+ * - Creates detailed routine steps with product assignments
+ * - Activates new routines and updates user preferences
+ * 
+ * Data Transformation:
+ * - Converts weekly routine suggestions to daily routines
+ * - Maps AI-recommended products to user's inventory
+ * - Creates routine steps with specific instructions
+ * - Assigns products to appropriate routine steps
+ * - Generates unique IDs for all created entities
+ * 
+ * @param {NextRequest} request - HTTP request object containing routine suggestion ID and approval data
+ * @returns {Promise<NextResponse>} JSON response with approval status, created routine IDs, and success details
+ * 
+ * @throws {Error} When user authentication fails or user not found
+ * @throws {Error} When routine suggestion data is invalid or missing required fields
+ * @throws {Error} When routine creation fails due to database constraints
+ * @throws {Error} When product creation fails due to validation errors
+ * @throws {Error} When routine steps creation fails due to data integrity issues
+ * @throws {Error} When database transaction fails during routine activation
+ */
 export async function POST(request: NextRequest) {
   try {
     const { suggestionId, routineData } = await request.json()

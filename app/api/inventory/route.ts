@@ -1,6 +1,46 @@
+/**
+ * Inventory API Route Handler
+ * 
+ * Manages user's skincare product inventory operations.
+ * Supports:
+ * - Adding new products to user's collection
+ * - Updating existing product information
+ * - Product creation with AI recommendations
+ * - Inventory tracking and management
+ */
+
 import { createClient } from "@supabase/supabase-js"
 import { type NextRequest, NextResponse } from "next/server"
-
+/**
+ * Handles POST requests to the inventory API endpoint for skincare product management
+ * 
+ * This endpoint manages the user's skincare product inventory, supporting various operations
+ * including adding new products, updating existing ones, and creating AI-recommended products.
+ * It integrates with the Supabase database to maintain a comprehensive product catalog
+ * and tracks user-specific inventory with usage patterns and preferences.
+ * 
+ * Supported Operations:
+ * - "add_product": Adds a new product to user's inventory
+ * - "update_product": Updates existing product information
+ * - "create_product": Creates a new product with AI recommendations
+ * - "remove_product": Removes a product from user's inventory
+ * 
+ * Product Data Managed:
+ * - Product name, brand, and category classification
+ * - Usage instructions and application notes
+ * - Expiration dates and storage requirements
+ * - User-specific notes and preferences
+ * - AI-generated recommendations and insights
+ * 
+ * @param {NextRequest} request - HTTP request object containing action type, product details, and user authentication
+ * @returns {Promise<NextResponse>} JSON response with operation status, product data, and success/error details
+ * 
+ * @throws {Error} When action type is not supported or missing
+ * @throws {Error} When user authentication fails or user not found
+ * @throws {Error} When product data validation fails (missing name, brand, etc.)
+ * @throws {Error} When database operation fails (insert, update, delete)
+ * @throws {Error} When AI product recommendation service is unavailable
+ */
 export async function POST(request: NextRequest) {
   try {
     console.log("[v0] Cabinet action API called")

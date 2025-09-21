@@ -1,3 +1,14 @@
+/**
+ * Chat Page Component
+ * 
+ * Main landing page for the chat interface.
+ * Features:
+ * - Displays conversation history grouped by date
+ * - Provides quick access to start new conversations
+ * - Shows loading states and empty states
+ * - Integrates with global navigation
+ */
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -14,6 +25,35 @@ interface ChatConversation {
   updated_at: string
 }
 
+/**
+ * ChatPage Component
+ * 
+ * Main landing page for the chat interface, providing access to conversation history
+ * and quick navigation to start new AI-powered skincare conversations. This component
+ * serves as the central hub for all chat interactions, displaying organized conversation
+ * history and providing intuitive navigation to the AI skincare advisor.
+ * 
+ * Key Features:
+ * - Displays conversation history grouped by date for easy navigation
+ * - Shows conversation titles, timestamps, and last activity
+ * - Provides quick access to start new conversations
+ * - Handles loading states and empty states gracefully
+ * - Integrates with global navigation for seamless user experience
+ * 
+ * Data Management:
+ * - Fetches conversation history from Supabase database
+ * - Groups conversations by creation date for better organization
+ * - Handles authentication state and user session management
+ * - Provides real-time updates when new conversations are created
+ * 
+ * User Experience:
+ * - Clean, organized interface for conversation management
+ * - Quick action buttons for common tasks
+ * - Responsive design for mobile and desktop
+ * - Empty state guidance for new users
+ * 
+ * @returns {JSX.Element} The chat landing page component with conversation history and navigation
+ */
 export default function ChatPage() {
   const [conversations, setConversations] = useState<ChatConversation[]>([])
   const [loading, setLoading] = useState(true)

@@ -1,3 +1,33 @@
+/**
+ * Skincare Calendar Component
+ * 
+ * Comprehensive calendar interface for managing skincare routines, appointments, and daily check-ins.
+ * This component provides a unified view of all skincare-related activities, allowing users to
+ * track their progress, manage appointments, and maintain consistent skincare routines.
+ * 
+ * Key Features:
+ * - Interactive calendar with routine scheduling and tracking
+ * - Daily routine completion status and progress indicators
+ * - Appointment management with treatment details
+ * - Check-in tracking with skin condition ratings
+ * - Routine step visualization and completion tracking
+ * - Responsive design for mobile and desktop
+ * 
+ * Data Management:
+ * - Displays routines organized by day of the week
+ * - Shows appointment schedules and treatment details
+ * - Tracks daily check-ins and skin condition ratings
+ * - Manages routine completion status and progress
+ * - Provides visual indicators for routine adherence
+ * 
+ * User Experience:
+ * - Intuitive calendar interface with clear visual hierarchy
+ * - Quick access to routine details and completion status
+ * - Appointment scheduling and management
+ * - Progress tracking with visual feedback
+ * - Mobile-optimized responsive design
+ */
+
 "use client"
 
 import { useState } from "react"
@@ -53,6 +83,37 @@ interface SkincareCalendarProps {
   isFullScreen?: boolean
 }
 
+/**
+ * SkincareCalendar Component
+ * 
+ * Main calendar component that renders the complete skincare management interface.
+ * This component orchestrates the display of routines, appointments, and check-ins
+ * in a unified calendar view, providing users with comprehensive skincare tracking.
+ * 
+ * Component Features:
+ * - Renders interactive calendar with skincare data overlay
+ * - Displays routine schedules and completion status
+ * - Shows appointment information and treatment details
+ * - Tracks daily check-ins and skin condition ratings
+ * - Provides visual indicators for routine adherence
+ * - Manages calendar navigation and date selection
+ * 
+ * Data Integration:
+ * - Processes routine data with day-of-week organization
+ * - Integrates appointment schedules and treatment details
+ * - Handles check-in data with completion status
+ * - Manages routine step visualization and tracking
+ * - Provides real-time updates for data changes
+ * 
+ * @param {Object} props - Component props
+ * @param {Routine[]} props.routines - Array of user routines with step details
+ * @param {Appointment[]} props.appointments - Array of scheduled appointments
+ * @param {DailyCheckin[]} props.checkins - Array of daily check-in records
+ * @param {string} props.userId - User ID for data filtering
+ * @param {Function} props.onExpand - Callback for expanding calendar view
+ * @param {boolean} props.isFullScreen - Whether calendar is in full-screen mode
+ * @returns {JSX.Element} Complete calendar interface with skincare data
+ */
 export function SkincareCalendar({
   routines,
   appointments,

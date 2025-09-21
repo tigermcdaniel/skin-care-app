@@ -1,8 +1,49 @@
+/**
+ * HomePage Component
+ * 
+ * Landing page for the Skincare Sanctuary application.
+ * Features:
+ * - User authentication check and redirect logic
+ * - Onboarding flow for new users
+ * - Marketing content and feature highlights
+ * - Call-to-action buttons for sign-up and login
+ * 
+ * Redirects authenticated users to appropriate pages based on profile completion.
+ */
+
 import { createClient } from "@/integrations/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-
+/**
+ * HomePage Component
+ * 
+ * Landing page for the Skincare Sanctuary application, serving as the main entry point
+ * for both new and returning users. This component handles user authentication, onboarding
+ * flow, and provides comprehensive marketing content to showcase the application's features
+ * and benefits for personalized skincare management.
+ * 
+ * Authentication Flow:
+ * - Checks user authentication status and redirects accordingly
+ * - Redirects authenticated users to appropriate pages based on profile completion
+ * - Handles onboarding flow for new users with incomplete profiles
+ * - Manages user session state and authentication persistence
+ * 
+ * Marketing Content:
+ * - Hero section with compelling value proposition
+ * - Feature highlights showcasing AI-powered skincare advice
+ * - Benefits section emphasizing personalized routines and progress tracking
+ * - Call-to-action buttons for sign-up and login
+ * - Social proof and testimonials for user trust
+ * 
+ * User Experience:
+ * - Responsive design optimized for mobile and desktop
+ * - Clear navigation paths for different user types
+ * - Engaging visual design with skincare-focused imagery
+ * - Intuitive user flow from landing to conversion
+ * 
+ * @returns {Promise<JSX.Element>} The home page component with authentication logic and marketing content
+ */
 export default async function HomePage() {
   const supabase = await createClient()
   const {

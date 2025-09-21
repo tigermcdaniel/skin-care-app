@@ -1,6 +1,6 @@
-# Skincare Sanctuary
+# AI Powered Skincare App
 
-A modern, AI-powered skincare companion that provides personalized guidance through intelligent conversation and mindful rituals.
+A modern, AI-powered skincare companion that provides personalized guidance through intelligent conversation and mindful routines.
 
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/tigermcdaniel-6224s-projects/v0-skin-care-app)
 [![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
@@ -8,7 +8,7 @@ A modern, AI-powered skincare companion that provides personalized guidance thro
 ## ✨ Features
 
 - **AI-Powered Conversations**: Natural dialogue with an expert skincare advisor
-- **Smart Routines**: AI-built morning & evening skincare rituals
+- **Smart Routines**: AI-built morning & evening skincare routines
 - **Progress Tracking**: Visual transformation insights and photo analysis
 - **Product Discovery**: Personalized product recommendations
 - **Inventory Management**: Track your skincare collection
@@ -93,6 +93,8 @@ skin-care-app/
 5. **Start development server**
    ```bash
    pnpm dev
+   OR 
+   npm run dev
    ```
 
 ## 📱 Usage

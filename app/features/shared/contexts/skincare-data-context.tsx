@@ -1,9 +1,28 @@
+/**
+ * Skincare Data Context
+ * 
+ * Centralized state management for all skincare-related data including:
+ * - User routines and their steps
+ * - Product inventory and usage tracking
+ * - Daily check-ins and progress photos
+ * - Goals and objectives
+ * 
+ * Provides methods for:
+ * - CRUD operations on all data types
+ * - Real-time data synchronization
+ * - Event-driven updates across components
+ * - Optimistic UI updates
+ */
+
 "use client"
 
 import type React from "react"
 import { createContext, useContext, useState, useEffect, useCallback } from "react"
 import { createClient } from "@/integrations/supabase/client"
 
+/**
+ * Product interface representing skincare products in the system
+ */
 interface Product {
   id: string
   name: string
@@ -15,6 +34,9 @@ interface Product {
   size: string | null
 }
 
+/**
+ * Individual step within a skincare routine
+ */
 interface RoutineStep {
   id: string
   routine_id: string
@@ -25,6 +47,9 @@ interface RoutineStep {
   products: Product
 }
 
+/**
+ * Skincare routine with day-specific scheduling support
+ */
 interface Routine {
   id: string
   user_id: string
@@ -37,6 +62,9 @@ interface Routine {
   routine_steps: RoutineStep[]
 }
 
+/**
+ * User's product inventory with usage tracking
+ */
 interface InventoryItem {
   id: string
   user_id: string
@@ -50,6 +78,9 @@ interface InventoryItem {
   products: Product
 }
 
+/**
+ * Daily check-in data for progress tracking
+ */
 interface CheckIn {
   id: string
   user_id: string
@@ -64,6 +95,9 @@ interface CheckIn {
   notes: string | null
 }
 
+/**
+ * User-defined skincare goals and objectives
+ */
 interface Goal {
   id: string
   user_id: string
@@ -101,6 +135,32 @@ interface SkincareDataContextType {
 
 const SkincareDataContext = createContext<SkincareDataContextType | undefined>(undefined)
 
+/**
+ * SkincareDataProvider Component
+ * 
+ * Centralized state management provider for the entire Skincare Sanctuary application.
+ * This component acts as the single source of truth for all skincare-related data,
+ * managing complex state interactions between routines, inventory, check-ins, and goals.
+ * 
+ * Key Responsibilities:
+ * - Manages user authentication state and session persistence
+ * - Handles CRUD operations for routines, inventory items, check-ins, and goals
+ * - Provides real-time data synchronization with Supabase backend
+ * - Implements optimistic UI updates for better user experience
+ * - Manages event-driven updates across all child components
+ * - Handles data loading states and error conditions
+ * 
+ * State Management:
+ * - Tracks user's active routines and their completion status
+ * - Manages product inventory with usage tracking and expiration dates
+ * - Stores daily check-ins with photos and skin condition notes
+ * - Maintains user goals and progress tracking
+ * - Provides data change listeners for real-time UI updates
+ * 
+ * @param {Object} props - Component configuration object
+ * @param {React.ReactNode} props.children - Child components that will have access to the skincare data context
+ * @returns {JSX.Element} React context provider wrapping all child components with skincare data access
+ */
 export function SkincareDataProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null) // Added user state
   const [routines, setRoutines] = useState<Routine[]>([])

@@ -1,3 +1,36 @@
+/**
+ * Routine Manager Component
+ * 
+ * Comprehensive routine management system for skincare routines, providing users with
+ * complete control over their daily and weekly skincare schedules. This component
+ * handles routine creation, editing, activation, and provides detailed step-by-step
+ * guidance for optimal skincare routine execution.
+ * 
+ * Key Features:
+ * - Routine creation and customization with step-by-step instructions
+ * - Morning and evening routine management
+ * - Product integration with inventory system
+ * - Routine activation and deactivation
+ * - Step completion tracking and progress monitoring
+ * - Routine sharing and collaboration features
+ * 
+ * Routine Management:
+ * - Create new routines with custom steps and products
+ * - Edit existing routines with step modifications
+ * - Activate/deactivate routines based on user preferences
+ * - Track routine completion and adherence
+ * - Manage routine schedules and timing
+ * - Integrate with product inventory for availability
+ * 
+ * User Experience:
+ * - Intuitive routine builder interface
+ * - Visual step-by-step guidance
+ * - Progress tracking and completion indicators
+ * - Quick access to routine actions
+ * - Responsive design for mobile and desktop
+ * - Routine performance analytics
+ */
+
 "use client"
 
 import { useState } from "react"
@@ -57,6 +90,42 @@ interface RoutineManagerProps {
   userId: string
 }
 
+/**
+ * RoutineManager Component
+ * 
+ * Main routine management component that handles the complete lifecycle of skincare routines,
+ * from creation and customization to activation and tracking. This component provides
+ * comprehensive routine management with step-by-step guidance and product integration.
+ * 
+ * Core Functionality:
+ * - Displays all user routines with detailed information
+ * - Manages routine creation, editing, and deletion
+ * - Handles routine activation and deactivation
+ * - Tracks routine completion and progress
+ * - Integrates with product inventory for availability
+ * - Provides routine performance analytics
+ * 
+ * Routine Operations:
+ * - Create new routines with custom steps and products
+ * - Edit existing routines with step modifications
+ * - Activate/deactivate routines based on user preferences
+ * - Track routine completion and adherence rates
+ * - Manage routine schedules and timing
+ * - Handle routine sharing and collaboration
+ * 
+ * Data Integration:
+ * - Processes routine data with step relationships
+ * - Manages product inventory integration
+ * - Tracks routine completion and progress
+ * - Handles routine scheduling and timing
+ * - Provides real-time routine updates
+ * 
+ * @param {Object} props - Component props
+ * @param {Routine[]} props.routines - Array of user routines with step details
+ * @param {InventoryItem[]} props.inventory - Array of inventory items for product integration
+ * @param {string} props.userId - User ID for data filtering and operations
+ * @returns {JSX.Element} Complete routine management interface
+ */
 export function RoutineManager({ routines, inventory, userId }: RoutineManagerProps) {
   const [isBuilderOpen, setIsBuilderOpen] = useState(false)
   const [editingRoutine, setEditingRoutine] = useState<Routine | null>(null)

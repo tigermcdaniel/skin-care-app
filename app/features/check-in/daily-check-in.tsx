@@ -1,3 +1,42 @@
+/**
+ * Daily Check-In Component
+ * 
+ * Comprehensive daily check-in system for skincare routine tracking, providing users with
+ * detailed daily monitoring of their skincare progress, routine completion, and skin
+ * condition assessment. This component handles photo documentation, routine tracking,
+ * and lifestyle factor monitoring for complete skincare journey management.
+ * 
+ * Key Features:
+ * - Daily routine completion tracking (morning/evening)
+ * - Skin condition rating and assessment
+ * - Photo documentation with AI analysis
+ * - Lifestyle factor monitoring (sleep, water, stress)
+ * - Mood tracking and personal notes
+ * - Progress photo organization and storage
+ * 
+ * Check-In Management:
+ * - Track morning and evening routine completion
+ * - Rate skin condition on a 1-10 scale
+ * - Monitor mood and lifestyle factors
+ * - Document progress with photos
+ * - Record personal notes and observations
+ * - Track sleep, water intake, and stress levels
+ * 
+ * Photo Documentation:
+ * - Upload multiple progress photos
+ * - AI-powered skin analysis and recommendations
+ * - Photo organization with notes and metadata
+ * - Lighting condition tracking
+ * - Progress comparison and timeline views
+ * 
+ * User Experience:
+ * - Intuitive check-in interface
+ * - Visual progress indicators
+ * - Quick photo upload and analysis
+ * - Comprehensive lifestyle tracking
+ * - Responsive design for all devices
+ */
+
 "use client"
 
 import type React from "react"
@@ -32,6 +71,41 @@ interface DailyCheckInProps {
   userId: string
 }
 
+/**
+ * DailyCheckIn Component
+ * 
+ * Main daily check-in component that handles comprehensive daily skincare monitoring,
+ * including routine completion tracking, skin condition assessment, photo documentation,
+ * and lifestyle factor monitoring. This component provides users with detailed
+ * daily insights into their skincare journey and progress.
+ * 
+ * Core Functionality:
+ * - Tracks morning and evening routine completion
+ * - Manages skin condition rating and assessment
+ * - Handles photo upload and AI analysis
+ * - Monitors lifestyle factors (sleep, water, stress)
+ * - Records mood and personal notes
+ * - Provides progress documentation and tracking
+ * 
+ * Data Management:
+ * - Processes daily check-in data with comprehensive tracking
+ * - Manages photo upload and storage
+ * - Handles AI analysis and recommendations
+ * - Tracks lifestyle factors and their impact
+ * - Provides progress comparison and insights
+ * 
+ * User Interface:
+ * - Intuitive check-in form with clear sections
+ * - Visual progress indicators and ratings
+ * - Photo upload with preview and analysis
+ * - Lifestyle factor monitoring interface
+ * - Responsive design for all devices
+ * 
+ * @param {Object} props - Component props
+ * @param {DailyCheckin | null} props.existingCheckin - Existing check-in data for editing
+ * @param {string} props.userId - User ID for data operations
+ * @returns {JSX.Element} Complete daily check-in interface
+ */
 export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [photoFiles, setPhotoFiles] = useState<File[]>([])
