@@ -1,9 +1,9 @@
 "use client"
 
-import { Card, CardContent } from "@/app/features/shared/ui/card"
-import { Button } from "@/app/features/shared/ui/button"
-import { Badge } from "@/app/features/shared/ui/badge"
-import { Progress } from "@/app/features/shared/ui/progress"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { Package, MessageCircle, AlertTriangle, Expand, Trash2 } from "lucide-react"
 import { useSkincareData } from "@/app/features/shared/contexts/skincare-data-context"
 

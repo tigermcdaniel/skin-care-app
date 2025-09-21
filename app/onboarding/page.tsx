@@ -1,12 +1,12 @@
 "use client"
 
 import { createClient } from "@/integrations/supabase/client"
-import { Button } from "@/app/features/shared/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
-import { Input } from "@/app/features/shared/ui/input"
-import { Label } from "@/app/features/shared/ui/label"
-import { Textarea } from "@/app/features/shared/ui/textarea"
-import { Checkbox } from "@/app/features/shared/ui/checkbox"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 

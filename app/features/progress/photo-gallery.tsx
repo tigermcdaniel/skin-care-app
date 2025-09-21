@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
-import { Button } from "@/app/features/shared/ui/button"
-import { Badge } from "@/app/features/shared/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/app/features/shared/ui/dialog"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Camera, Star, Eye } from "lucide-react"
-import { PLACEHOLDER_IMAGE } from "@/app/features/shared/constants/assets"
+import { PLACEHOLDER_IMAGE } from "@/lib/constants"
 
 interface ProgressPhoto {
   id: string

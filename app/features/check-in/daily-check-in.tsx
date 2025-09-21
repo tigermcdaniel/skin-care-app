@@ -3,12 +3,12 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
-import { Button } from "@/app/features/shared/ui/button"
-import { Label } from "@/app/features/shared/ui/label"
-import { Textarea } from "@/app/features/shared/ui/textarea"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/integrations/supabase/client"
-import { PLACEHOLDER_IMAGE } from "@/app/features/shared/constants/assets"
+import { PLACEHOLDER_IMAGE } from "@/lib/constants"
 import { useRouter } from "next/navigation"
 import { Camera, X, Sparkles } from "lucide-react"
 
@@ -92,7 +92,7 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
   const analyzePhotosAndSuggestRoutine = async (photoUrls: string[]) => {
     setIsAnalyzing(true)
     try {
-      const response = await fetch("/api/analyze-photos", {
+      const response = await fetch("/api/photos/analyze", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

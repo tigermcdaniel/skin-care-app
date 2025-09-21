@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
-import { Button } from "@/app/features/shared/ui/button"
-import { Badge } from "@/app/features/shared/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Sun, Moon, Check, X, Calendar, ChevronDown, ChevronUp } from "lucide-react"
 
 interface WeeklyRoutineSuggestion {

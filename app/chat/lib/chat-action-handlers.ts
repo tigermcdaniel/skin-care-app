@@ -423,7 +423,7 @@ Benefits: ${product.benefits.join(", ")}`
 
         // Trigger photo analysis
         try {
-          const analysisResponse = await fetch("/api/analyze-photos", {
+          const analysisResponse = await fetch("/api/photos/analyze", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

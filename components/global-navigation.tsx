@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Button } from "@/app/features/shared/ui/button"
+import { Button } from "@/components/ui/button"
 import { MessageCircle, Calendar, BarChart3, Package, User, CalendarDays, LogOut, Plus } from "lucide-react"
 import { createClient } from "@/integrations/supabase/client"
 

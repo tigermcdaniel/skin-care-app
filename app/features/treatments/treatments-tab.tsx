@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/integrations/supabase/client"
-import { Button } from "@/app/features/shared/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
-import { Badge } from "@/app/features/shared/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Calendar, Clock, MapPin, Star, CheckCircle, Expand, Trash2 } from "lucide-react"
 
 interface Treatment {

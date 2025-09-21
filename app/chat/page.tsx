@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { createClient } from "@/integrations/supabase/client"
-import { Button } from "@/app/features/shared/ui/button"
+import { Button } from "@/components/ui/button"
 import { MessageCircle, Plus, Clock } from "lucide-react"
 import Link from "next/link"
-import { GlobalNavigation } from "@/app/global-navigation"
+import { GlobalNavigation } from "@/components/global-navigation"
 
 interface ChatConversation {
   id: string
@@ -41,7 +41,7 @@ export default function ChatPage() {
       const groupedConversations: ChatConversation[] = []
       const messagesByDate: { [key: string]: any[] } = {}
 
-      data?.forEach((message) => {
+      data?.forEach((message: any) => {
         const date = new Date(message.created_at).toDateString()
         if (!messagesByDate[date]) {
           messagesByDate[date] = []

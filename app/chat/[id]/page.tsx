@@ -294,7 +294,7 @@ function ChatConversationPageContent() {
           throw new Error("No authentication session found")
         }
 
-        const response = await fetch("/api/cabinet-action", {
+        const response = await fetch("/api/inventory", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -437,7 +437,7 @@ function ChatConversationPageContent() {
       }
 
       if (data) {
-        const mappedMessages = data.map((msg) => ({
+        const mappedMessages = data.map((msg: any) => ({
           id: msg.id.toString(),
           role: msg.message_type as "user" | "assistant",
           content: msg.message_type === "user" ? msg.message || "" : msg.response || "",
@@ -817,7 +817,10 @@ function ChatConversationPageContent() {
             )}
             {activeTab === "calendar" && (
               <SkincareCalendar
-                routines={routines || []}
+                routines={(routines || []).map(routine => ({
+                  ...routine,
+                  day_of_week: routine.day_of_week ?? 0
+                }))}
                 appointments={appointments || []}
                 checkins={checkins || []}
                 userId={user?.id}

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { DailyCheckIn } from "./daily-check-in"
 import { useSkincareData } from "@/app/features/shared/contexts/skincare-data-context"
 import { Expand, MessageCircle } from "lucide-react"
-import { Button } from "@/app/features/shared/ui/button"
+import { Button } from "@/components/ui/button"
 
 interface CheckInTabProps {
   onExpand?: () => void

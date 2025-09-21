@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { ImageIcon, X } from "lucide-react"
-import { PLACEHOLDER_IMAGE } from "@/app/features/shared/constants/assets"
+import { PLACEHOLDER_IMAGE } from "@/lib/constants"
 
 interface ChatInputProps {
   input: string

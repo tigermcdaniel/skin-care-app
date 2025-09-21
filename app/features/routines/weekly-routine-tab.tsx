@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
-import { Button } from "@/app/features/shared/ui/button"
-import { Badge } from "@/app/features/shared/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/features/shared/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sun, Moon, Check, ChevronDown, ChevronUp, Edit3, Save, X, Plus, Trash2 } from "lucide-react"
 import { useSkincareData } from "@/app/features/shared/contexts/skincare-data-context"
 

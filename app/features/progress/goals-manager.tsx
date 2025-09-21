@@ -1,13 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
-import { Button } from "@/app/features/shared/ui/button"
-import { Input } from "@/app/features/shared/ui/input"
-import { Label } from "@/app/features/shared/ui/label"
-import { Textarea } from "@/app/features/shared/ui/textarea"
-import { Progress } from "@/app/features/shared/ui/progress"
-import { Badge } from "@/app/features/shared/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/app/features/shared/ui/dialog"
+} from "@/components/ui/dialog"
 import { createClient } from "@/integrations/supabase/client"
 import { useRouter } from "next/navigation"
 import { Plus, Target, Edit, Trash2, CheckCircle } from "lucide-react"

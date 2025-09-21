@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Calendar } from "@/app/features/shared/ui/calendar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/features/shared/ui/card"
-import { Badge } from "@/app/features/shared/ui/badge"
-import { Button } from "@/app/features/shared/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/features/shared/ui/tabs"
+import { Calendar } from "@/components/ui/calendar"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarDays, Clock, User, CheckCircle, Circle, Expand } from "lucide-react"
 import Link from "next/link"
 
