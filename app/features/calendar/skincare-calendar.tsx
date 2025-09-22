@@ -391,7 +391,7 @@ export function SkincareCalendar({
 
                   {/* Quick Actions */}
                   <div className="pt-4 border-t border-stone-200">
-                    <Button asChild className="w-full bg-sage-600 hover:bg-sage-700 text-white">
+                    <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                       <Link href="/check-in">
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Daily Reflection
@@ -456,7 +456,7 @@ export function SkincareCalendar({
                         </div>
                         <Badge
                           variant={appointment.status === "confirmed" ? "default" : "secondary"}
-                          className={appointment.status === "confirmed" ? "bg-sage-100 text-sage-800" : ""}
+                          className={appointment.status === "confirmed" ? "bg-blue-100 text-blue-800" : ""}
                         >
                           {appointment.status}
                         </Badge>
@@ -468,7 +468,7 @@ export function SkincareCalendar({
                 <div className="text-center py-8 text-charcoal-600">
                   <CalendarDays className="h-12 w-12 text-charcoal-400 mx-auto mb-4" />
                   <p>No upcoming appointments</p>
-                  <Button asChild className="mt-4 bg-sage-600 hover:bg-sage-700 text-white">
+                  <Button asChild className="mt-4 bg-blue-600 hover:bg-blue-700 text-white">
                     <Link href="/treatments">Schedule Treatment</Link>
                   </Button>
                 </div>

@@ -119,7 +119,7 @@ export function TreatmentsTab({}: TreatmentsTabProps) {
         <button
           onClick={() => setActiveView("upcoming")}
           className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeView === "upcoming" ? "bg-white text-sage-700 shadow-sm" : "text-stone-600 hover:text-charcoal-900"
+            activeView === "upcoming" ? "bg-white text-blue-700 shadow-sm" : "text-stone-600 hover:text-charcoal-900"
           }`}
         >
           Upcoming
@@ -127,7 +127,7 @@ export function TreatmentsTab({}: TreatmentsTabProps) {
         <button
           onClick={() => setActiveView("history")}
           className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            activeView === "history" ? "bg-white text-sage-700 shadow-sm" : "text-stone-600 hover:text-charcoal-900"
+            activeView === "history" ? "bg-white text-blue-700 shadow-sm" : "text-stone-600 hover:text-charcoal-900"
           }`}
         >
           History
@@ -151,7 +151,7 @@ export function TreatmentsTab({}: TreatmentsTabProps) {
                       )
                     }
                   }}
-                  className="mt-2 text-xs text-sage-600 hover:text-sage-700 underline"
+                  className="mt-2 text-xs text-blue-600 hover:text-blue-700 underline"
                 >
                   Ask chat to schedule one
                 </button>

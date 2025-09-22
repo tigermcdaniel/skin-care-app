@@ -33,7 +33,7 @@ export function InventoryManagerTab() {
   const getAmountColor = (amount: number) => {
     if (amount <= 20) return "text-red-600"
     if (amount <= 50) return "text-yellow-600"
-    return "text-green-600"
+    return "text-blue-600"
   }
 
   if (isLoading) {
@@ -69,7 +69,7 @@ export function InventoryManagerTab() {
                   </h3>
                   <p className="text-sm text-charcoal-600">{item.products.brand}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge className="bg-sage-100 text-sage-800 border-sage-200 text-xs">
+                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">
                       {item.products.category}
                     </Badge>
                     {needsReorder && (

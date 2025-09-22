@@ -192,13 +192,13 @@ export function InventoryManager({ inventory, userId }: InventoryManagerProps) {
     if (daysUntilExpiry < 0) return { status: "expired", color: "bg-red-500", text: "Expired" }
     if (daysUntilExpiry <= 30)
       return { status: "expiring", color: "bg-yellow-500", text: `${daysUntilExpiry} days left` }
-    return { status: "good", color: "bg-green-500", text: `${daysUntilExpiry} days left` }
+    return { status: "good", color: "bg-blue-500", text: `${daysUntilExpiry} days left` }
   }
 
   const getAmountColor = (amount: number) => {
     if (amount <= 20) return "text-red-600"
     if (amount <= 50) return "text-yellow-600"
-    return "text-green-600"
+    return "text-blue-600"
   }
 
   const askChatAboutProduct = (item: InventoryItem) => {
@@ -245,14 +245,14 @@ export function InventoryManager({ inventory, userId }: InventoryManagerProps) {
           <Button
             onClick={() => router.push("/chat/new-session?prompt=What products should I add to my collection?")}
             variant="outline"
-            className="border-sage-200 text-sage-700 hover:bg-sage-50"
+            className="border-blue-200 text-blue-700 hover:bg-blue-50"
           >
             <MessageCircle className="h-4 w-4 mr-2" />
             Ask for Recommendations
           </Button>
           <Button
             onClick={() => router.push("/products")}
-            className="bg-sage-600 hover:bg-sage-700 text-white transition-all duration-300"
+            className="bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300"
           >
             <Package className="h-4 w-4 mr-2" />
             Browse Products
@@ -270,7 +270,7 @@ export function InventoryManager({ inventory, userId }: InventoryManagerProps) {
           <div className="flex gap-3 justify-center">
             <Button
               onClick={() => router.push("/chat/new-session?prompt=What skincare products should I start with?")}
-              className="bg-sage-600 hover:bg-sage-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <MessageCircle className="h-4 w-4 mr-2" />
               Ask Chat for Products
@@ -278,7 +278,7 @@ export function InventoryManager({ inventory, userId }: InventoryManagerProps) {
             <Button
               onClick={() => router.push("/products")}
               variant="outline"
-              className="border-sage-200 text-sage-700 hover:bg-sage-50"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
             >
               <Package className="h-4 w-4 mr-2" />
               Browse Manually
@@ -305,7 +305,7 @@ export function InventoryManager({ inventory, userId }: InventoryManagerProps) {
                       <CardDescription className="font-medium text-charcoal-600">{item.products.brand}</CardDescription>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <Badge variant="secondary" className="bg-sage-100 text-sage-800 border-sage-200">
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
                         {item.products.category}
                       </Badge>
                       {needsReorder && (
@@ -358,7 +358,7 @@ export function InventoryManager({ inventory, userId }: InventoryManagerProps) {
                       <Button
                         onClick={() => markAsUsed(item.id, item.amount_remaining)}
                         disabled={isLoading}
-                        className="flex-1 bg-sage-600 hover:bg-sage-700 text-white"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Mark as Used
@@ -447,7 +447,7 @@ export function InventoryManager({ inventory, userId }: InventoryManagerProps) {
                             <Button
                               onClick={updateInventoryItem}
                               disabled={isLoading}
-                              className="w-full bg-sage-600 hover:bg-sage-700 text-white"
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                             >
                               {isLoading ? "Updating..." : "Update Product"}
                             </Button>

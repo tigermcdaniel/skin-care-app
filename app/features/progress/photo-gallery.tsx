@@ -38,13 +38,13 @@ export function PhotoGallery({ photos }: PhotoGalleryProps) {
       case "daily":
         return "bg-blue-100 text-blue-800"
       case "weekly":
-        return "bg-green-100 text-green-800"
+        return "bg-blue-100 text-blue-800"
       case "monthly":
         return "bg-purple-100 text-purple-800"
       case "before":
         return "bg-orange-100 text-orange-800"
       case "after":
-        return "bg-emerald-100 text-emerald-800"
+        return "bg-blue-100 text-blue-800"
       default:
         return "bg-gray-100 text-gray-800"
     }

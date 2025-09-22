@@ -261,31 +261,33 @@ export function WeeklyRoutineTab() {
               <div className="grid grid-cols-2 gap-4">
                 {/* Morning Routine */}
                 <div
-                  className={`p-3 rounded-lg border ${day.morningCompleted ? "bg-green-100 border-green-200" : "bg-white border-stone-200"}`}
+                  className={`p-3 rounded-lg border ${day.morningCompleted ? "bg-blue-100 border-blue-200" : "bg-white border-stone-200"}`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Sun className="h-4 w-4 text-black" />
                       <span className="text-sm font-medium text-charcoal-800">Morning</span>
                     </div>
-                    {day.morningCompleted && <Check className="h-4 w-4 text-green-600" />}
+                    {day.morningCompleted && <Check className="h-4 w-4 text-blue-600" />}
                   </div>
 
                   {day.morningRoutine ? (
                     <div className="space-y-2">
                       <p className="text-xs text-charcoal-600">{day.morningRoutine.routine_steps?.length || 0} steps</p>
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkComplete(day.morningRoutine.id, day.morningRoutine.name, day.date)}
-                        disabled={day.morningCompleted || isPastDate(day.date)}
-                        className={
-                          day.morningCompleted
-                            ? "bg-gray-400 hover:bg-gray-400 text-white cursor-default text-xs"
-                            : "bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs"
-                        }
-                      >
-                        {day.morningCompleted ? "Completed" : "Mark Complete"}
-                      </Button>
+                      {isToday(day.date) && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkComplete(day.morningRoutine.id, day.morningRoutine.name, day.date)}
+                          disabled={day.morningCompleted}
+                          className={
+                            day.morningCompleted
+                              ? "bg-gray-400 hover:bg-gray-400 text-white cursor-default text-xs"
+                              : "bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs"
+                          }
+                        >
+                          {day.morningCompleted ? "Completed" : "Mark Complete"}
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <p className="text-xs text-charcoal-500">No routine set</p>
@@ -294,31 +296,33 @@ export function WeeklyRoutineTab() {
 
                 {/* Evening Routine */}
                 <div
-                  className={`p-3 rounded-lg border ${day.eveningCompleted ? "bg-green-100 border-green-200" : "bg-white border-stone-200"}`}
+                  className={`p-3 rounded-lg border ${day.eveningCompleted ? "bg-blue-100 border-blue-200" : "bg-white border-stone-200"}`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <Moon className="h-4 w-4 text-black" />
                       <span className="text-sm font-medium text-charcoal-800">Evening</span>
                     </div>
-                    {day.eveningCompleted && <Check className="h-4 w-4 text-green-600" />}
+                    {day.eveningCompleted && <Check className="h-4 w-4 text-blue-600" />}
                   </div>
 
                   {day.eveningRoutine ? (
                     <div className="space-y-2">
                       <p className="text-xs text-charcoal-600">{day.eveningRoutine.routine_steps?.length || 0} steps</p>
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkComplete(day.eveningRoutine.id, day.eveningRoutine.name, day.date)}
-                        disabled={day.eveningCompleted || isPastDate(day.date)}
-                        className={
-                          day.eveningCompleted
-                            ? "bg-gray-400 hover:bg-gray-400 text-white cursor-default text-xs"
-                            : "bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs"
-                        }
-                      >
-                        {day.eveningCompleted ? "Completed" : "Mark Complete"}
-                      </Button>
+                      {isToday(day.date) && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkComplete(day.eveningRoutine.id, day.eveningRoutine.name, day.date)}
+                          disabled={day.eveningCompleted}
+                          className={
+                            day.eveningCompleted
+                              ? "bg-gray-400 hover:bg-gray-400 text-white cursor-default text-xs"
+                              : "bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs"
+                          }
+                        >
+                          {day.eveningCompleted ? "Completed" : "Mark Complete"}
+                        </Button>
+                      )}
                     </div>
                   ) : (
                     <p className="text-xs text-charcoal-500">No routine set</p>
@@ -352,7 +356,7 @@ export function WeeklyRoutineTab() {
                               <Button
                                 size="sm"
                                 onClick={() => saveChanges(`${day.date}-morning`)}
-                                className="h-8 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
+                                className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white"
                               >
                                 <Save className="h-3 w-3 mr-1" />
                                 Save
@@ -458,7 +462,7 @@ export function WeeklyRoutineTab() {
                               <Button
                                 size="sm"
                                 onClick={() => saveChanges(`${day.date}-evening`)}
-                                className="h-8 px-3 text-xs bg-green-600 hover:bg-green-700 text-white"
+                                className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white"
                               >
                                 <Save className="h-3 w-3 mr-1" />
                                 Save

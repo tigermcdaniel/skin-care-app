@@ -156,7 +156,7 @@ export function GoalsManager({ goals, userId }: GoalsManagerProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800"
+        return "bg-blue-100 text-blue-800"
       case "active":
         return "bg-blue-100 text-blue-800"
       case "paused":
@@ -286,7 +286,7 @@ export function GoalsManager({ goals, userId }: GoalsManagerProps) {
                       size="sm"
                       onClick={() => updateGoalProgress(goal.id, Math.min(100, goal.progress + 10))}
                       disabled={goal.progress >= 100}
-                      className="text-green-600"
+                      className="text-blue-600"
                     >
                       +10%
                     </Button>
@@ -313,13 +313,13 @@ export function GoalsManager({ goals, userId }: GoalsManagerProps) {
           <h3 className="text-lg font-semibold text-gray-900">Completed Goals</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {completedGoals.map((goal) => (
-              <Card key={goal.id} className="border-0 shadow-lg bg-green-50">
+              <Card key={goal.id} className="border-0 shadow-lg bg-blue-50">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <CheckCircle className="h-5 w-5 text-blue-600" />
                       <div>
-                        <CardTitle className="text-lg text-green-800">{goal.title}</CardTitle>
+                        <CardTitle className="text-lg text-blue-800">{goal.title}</CardTitle>
                         {goal.description && <CardDescription className="mt-1">{goal.description}</CardDescription>}
                       </div>
                     </div>
@@ -327,7 +327,7 @@ export function GoalsManager({ goals, userId }: GoalsManagerProps) {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm text-green-700">
+                  <div className="text-sm text-blue-700">
                     Completed on {new Date(goal.updated_at).toLocaleDateString()}
                   </div>
                 </CardContent>
