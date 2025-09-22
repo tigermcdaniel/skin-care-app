@@ -53,7 +53,7 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-serif text-foreground mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground font-light">Continue your skincare sanctuary</p>
+          <p className="text-muted-foreground font-light">Continue your AI skincare journey</p>
         </div>
 
         <Card className="border shadow-lg">
@@ -101,7 +101,7 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-8 text-center text-sm">
-              <span className="text-muted-foreground">New to our sanctuary? </span>
+              <span className="text-muted-foreground">New to our AI skincare consultant? </span>
               <Link href="/auth/sign-up" className="font-medium text-primary hover:text-primary/80 transition-colors">
                 Create account
               </Link>

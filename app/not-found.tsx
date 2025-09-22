@@ -15,7 +15,7 @@ export default function NotFound() {
           </div>
           <CardTitle className="text-xl text-sage-800">Page not found</CardTitle>
           <CardDescription>
-            The page you're looking for doesn't exist in your skincare sanctuary.
+            The page you're looking for doesn't exist in your AI skincare consultant.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

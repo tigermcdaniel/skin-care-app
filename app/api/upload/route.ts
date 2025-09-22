@@ -17,7 +17,7 @@ import { type NextRequest, NextResponse } from "next/server"
  * This endpoint manages file uploads to Vercel Blob storage, specifically designed for
  * skincare-related images including progress photos, skin analysis images, and routine
  * documentation. It validates file types, processes images, and provides secure access
- * URLs for the Skincare Sanctuary application.
+ * URLs for the AI-powered skincare consultant application.
  * 
  * Upload Process:
  * - Validates file type and size constraints

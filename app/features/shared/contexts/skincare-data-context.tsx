@@ -138,7 +138,7 @@ const SkincareDataContext = createContext<SkincareDataContextType | undefined>(u
 /**
  * SkincareDataProvider Component
  * 
- * Centralized state management provider for the entire Skincare Sanctuary application.
+ * Centralized state management provider for the entire AI-powered skincare consultant application.
  * This component acts as the single source of truth for all skincare-related data,
  * managing complex state interactions between routines, inventory, check-ins, and goals.
  * 

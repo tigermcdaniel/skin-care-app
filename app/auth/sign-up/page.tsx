@@ -75,7 +75,7 @@ export default function SignUpPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-serif text-charcoal-900 mb-2">Begin Your Journey</h1>
-          <p className="text-charcoal-600 font-light">Create your personalized skincare sanctuary</p>
+          <p className="text-charcoal-600 font-light">Create your personalized AI skincare consultant</p>
         </div>
 
         <Card className="border border-sage-200 shadow-lg bg-white">
@@ -164,15 +164,15 @@ export default function SignUpPage() {
               )}
               <Button
                 type="submit"
-                className="w-full h-12 bg-sage-600 hover:bg-sage-700 text-white font-medium transition-colors"
+                className="w-full h-12 bg-black hover:bg-gray-800 text-white font-medium transition-colors"
                 disabled={isLoading}
               >
-                {isLoading ? "Creating sanctuary..." : "Create Account"}
+                {isLoading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
 
             <div className="mt-8 text-center text-sm">
-              <span className="text-charcoal-600">Already have a sanctuary? </span>
+              <span className="text-charcoal-600">Already have an account? </span>
               <Link href="/auth/login" className="font-medium text-sage-600 hover:text-sage-700 transition-colors">
                 Sign in
               </Link>

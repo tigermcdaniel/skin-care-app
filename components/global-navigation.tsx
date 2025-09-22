@@ -1,7 +1,7 @@
 /**
  * GlobalNavigation Component
  * 
- * Main navigation component for the Skincare Sanctuary application.
+ * Main navigation component for the AI-powered skincare consultant application.
  * Features:
  * - Primary navigation links to all major sections
  * - Quick action buttons for common tasks
@@ -72,7 +72,7 @@ const quickActions = [
 /**
  * GlobalNavigation Component
  * 
- * Main navigation component for the Skincare Sanctuary application, providing comprehensive
+ * Main navigation component for the AI-powered skincare consultant application, providing comprehensive
  * navigation access to all major features and sections. This component serves as the primary
  * navigation hub, offering intuitive access to chat, routines, inventory, progress tracking,
  * and user management features with a clean, responsive design.
@@ -128,7 +128,7 @@ export function GlobalNavigation() {
             href="/chat/new-session"
             className="font-serif text-xl text-stone-800 hover:text-sage-700 transition-colors"
           >
-            Skincare Sanctuary
+            AI Skincare
           </Link>
 
           <div className="hidden lg:flex items-center space-x-1">
