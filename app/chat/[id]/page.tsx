@@ -701,7 +701,7 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("routines")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "routines"
-                  ? "bg-white text-green-700 shadow-sm"
+                  ? "bg-white text-black shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >
@@ -712,7 +712,7 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("collection")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "collection"
-                  ? "bg-white text-green-700 shadow-sm"
+                  ? "bg-white text-black shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >
@@ -723,7 +723,7 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("calendar")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "calendar"
-                  ? "bg-white text-green-700 shadow-sm"
+                  ? "bg-white text-black shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >
@@ -734,7 +734,7 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("treatments")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "treatments"
-                  ? "bg-white text-green-700 shadow-sm"
+                  ? "bg-white text-black shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >
@@ -745,7 +745,7 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("checkin")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "checkin"
-                  ? "bg-white text-green-700 shadow-sm"
+                  ? "bg-white text-black shadow-sm"
                   : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
               }`}
             >

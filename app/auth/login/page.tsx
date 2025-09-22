@@ -39,11 +39,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-12">
-          <div className="mx-auto h-16 w-16 bg-primary rounded-full flex items-center justify-center mb-6">
-            <svg className="h-8 w-8 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mx-auto h-16 w-16 bg-black rounded-full flex items-center justify-center mb-6">
+            <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -52,19 +52,19 @@ export default function LoginPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-serif text-foreground mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground font-light">Continue your AI skincare journey</p>
+          <h1 className="text-3xl font-serif text-black mb-2">Welcome Back</h1>
+          <p className="text-gray-600 font-light">Continue your AI skincare journey</p>
         </div>
 
-        <Card className="border shadow-lg">
+        <Card className="border border-gray-200 shadow-lg bg-white">
           <CardHeader className="pb-6">
-            <CardTitle className="text-xl font-serif">Sign In</CardTitle>
-            <CardDescription>Enter your credentials to access your ritual</CardDescription>
+            <CardTitle className="text-xl font-serif text-black">Sign In</CardTitle>
+            <CardDescription className="text-gray-600">Enter your credentials to access your ritual</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email" className="font-medium">
+                <Label htmlFor="email" className="font-medium text-black">
                   Email
                 </Label>
                 <Input
@@ -78,7 +78,7 @@ export default function LoginPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="font-medium">
+                <Label htmlFor="password" className="font-medium text-black">
                   Password
                 </Label>
                 <Input
@@ -101,8 +101,8 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-8 text-center text-sm">
-              <span className="text-muted-foreground">New to our AI skincare consultant? </span>
-              <Link href="/auth/sign-up" className="font-medium text-primary hover:text-primary/80 transition-colors">
+              <span className="text-gray-600">New to our AI skincare consultant? </span>
+              <Link href="/auth/sign-up" className="font-medium text-black hover:text-gray-800 transition-colors">
                 Create account
               </Link>
             </div>

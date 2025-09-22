@@ -101,7 +101,7 @@ export function ChatInput({
         <button
           type="submit"
           disabled={isLoading || (!input.trim() && selectedImages.length === 0)}
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
           Send
         </button>

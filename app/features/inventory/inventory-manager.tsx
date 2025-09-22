@@ -459,7 +459,7 @@ export function InventoryManager({ inventory, userId }: InventoryManagerProps) {
                         size="sm"
                         onClick={() => removeFromInventory(item.id)}
                         disabled={isLoading}
-                        className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
+                        className="text-black hover:text-gray-800 hover:bg-gray-100 border-black"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

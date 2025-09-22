@@ -225,7 +225,6 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-serif font-semibold text-charcoal-900">Weekly Routine Schedule</h2>
-          <p className="text-sm text-charcoal-600">Today + Next 5 Days • Track and customize your daily routines</p>
         </div>
         {!isFullScreen && onExpand && (
           <Button
@@ -243,7 +242,7 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
         {weekDays.map((day) => (
           <Card
             key={day.date}
-            className={`border-stone-200 ${isToday(day.date) ? "bg-green-50 border-green-200" : "bg-stone-50"}`}
+            className={`border-stone-200 ${isToday(day.date) ? "bg-gray-200 border-gray-300" : "bg-stone-50"}`}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -252,7 +251,7 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
                     <CardTitle className="text-lg font-serif text-charcoal-900">
                       {day.dayName}
                       {isToday(day.date) && (
-                        <Badge className="ml-2 bg-green-100 text-green-800 border-green-200 text-xs">Today</Badge>
+                        <Badge className="ml-2 bg-gray-300 text-gray-900 border-gray-400 text-xs">Today</Badge>
                       )}
                     </CardTitle>
                     <p className="text-sm text-charcoal-600">{formatDateDisplay(day.date)}</p>
@@ -278,7 +277,7 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Sun className="h-4 w-4 text-yellow-500" />
+                      <Sun className="h-4 w-4 text-black" />
                       <span className="text-sm font-medium text-charcoal-800">Morning</span>
                     </div>
                     {day.morningCompleted && <Check className="h-4 w-4 text-green-600" />}
@@ -293,8 +292,8 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
                         disabled={day.morningCompleted || isPastDate(day.date)}
                         className={
                           day.morningCompleted
-                            ? "bg-green-600 hover:bg-green-600 text-white cursor-default text-xs"
-                            : "bg-green-600 hover:bg-green-700 text-white text-xs"
+                            ? "bg-gray-400 hover:bg-gray-400 text-white cursor-default text-xs"
+                            : "bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs"
                         }
                       >
                         {day.morningCompleted ? "Completed" : "Mark Complete"}
@@ -311,7 +310,7 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Moon className="h-4 w-4 text-purple-500" />
+                      <Moon className="h-4 w-4 text-black" />
                       <span className="text-sm font-medium text-charcoal-800">Evening</span>
                     </div>
                     {day.eveningCompleted && <Check className="h-4 w-4 text-green-600" />}
@@ -326,8 +325,8 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
                         disabled={day.eveningCompleted || isPastDate(day.date)}
                         className={
                           day.eveningCompleted
-                            ? "bg-green-600 hover:bg-green-600 text-white cursor-default text-xs"
-                            : "bg-green-600 hover:bg-green-700 text-white text-xs"
+                            ? "bg-gray-400 hover:bg-gray-400 text-white cursor-default text-xs"
+                            : "bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs"
                         }
                       >
                         {day.eveningCompleted ? "Completed" : "Mark Complete"}
@@ -347,7 +346,7 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="flex items-center gap-2 font-medium text-charcoal-800">
-                          <Sun className="h-4 w-4 text-yellow-500" />
+                          <Sun className="h-4 w-4 text-black" />
                           Morning Routine Steps
                         </h4>
                         <div className="flex items-center gap-2">
@@ -453,7 +452,7 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="flex items-center gap-2 font-medium text-charcoal-800">
-                          <Moon className="h-4 w-4 text-purple-500" />
+                          <Moon className="h-4 w-4 text-black" />
                           Evening Routine Steps
                         </h4>
                         <div className="flex items-center gap-2">

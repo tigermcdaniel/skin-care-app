@@ -61,10 +61,10 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-12">
-          <div className="mx-auto h-16 w-16 bg-sage-600 rounded-full flex items-center justify-center mb-6">
+          <div className="mx-auto h-16 w-16 bg-black rounded-full flex items-center justify-center mb-6">
             <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -74,20 +74,20 @@ export default function SignUpPage() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-serif text-charcoal-900 mb-2">Begin Your Journey</h1>
-          <p className="text-charcoal-600 font-light">Create your personalized AI skincare consultant</p>
+          <h1 className="text-3xl font-serif text-black mb-2">Begin Your Journey</h1>
+          <p className="text-gray-600 font-light">Create your personalized AI skincare consultant</p>
         </div>
 
-        <Card className="border border-sage-200 shadow-lg bg-white">
+        <Card className="border border-gray-200 shadow-lg bg-white">
           <CardHeader className="pb-6">
-            <CardTitle className="text-xl font-serif text-charcoal-900">Create Account</CardTitle>
-            <CardDescription className="text-charcoal-600">Begin your journey to radiant skin</CardDescription>
+            <CardTitle className="text-xl font-serif text-black">Create Account</CardTitle>
+            <CardDescription className="text-gray-600">Begin your journey to radiant skin</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignUp} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-charcoal-700 font-medium">
+                  <Label htmlFor="firstName" className="text-black font-medium">
                     First Name
                   </Label>
                   <Input
@@ -172,8 +172,8 @@ export default function SignUpPage() {
             </form>
 
             <div className="mt-8 text-center text-sm">
-              <span className="text-charcoal-600">Already have an account? </span>
-              <Link href="/auth/login" className="font-medium text-sage-600 hover:text-sage-700 transition-colors">
+              <span className="text-gray-600">Already have an account? </span>
+              <Link href="/auth/login" className="font-medium text-black hover:text-gray-800 transition-colors">
                 Sign in
               </Link>
             </div>

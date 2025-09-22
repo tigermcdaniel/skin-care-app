@@ -359,7 +359,7 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
               <Button
                 onClick={saveCheckIn}
                 disabled={isLoading || isAnalyzing}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors duration-200 h-12 shadow-lg"
+                className="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium transition-colors duration-200 h-12 shadow-lg"
                 size="lg"
               >
                 {isAnalyzing ? (

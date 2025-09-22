@@ -213,8 +213,8 @@ export function SkincareCalendar({
       <div className="relative w-full h-full flex flex-col items-center justify-center">
         <span className="text-sm">{date.getDate()}</span>
         <div className="flex gap-1 mt-1">
-          {hasAppointment && <div className="w-2 h-2 bg-red-500 rounded-full"></div>}
-          {hasCheckin && <div className="w-2 h-2 bg-green-500 rounded-full"></div>}
+          {hasAppointment && <div className="w-2 h-2 bg-gray-600 rounded-full"></div>}
+          {hasCheckin && <div className="w-2 h-2 bg-blue-500 rounded-full"></div>}
         </div>
       </div>
     )
@@ -285,11 +285,11 @@ export function SkincareCalendar({
 
                   <div className="mt-4 flex items-center gap-4 text-sm text-charcoal-600">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                       <span>Check-ins Completed</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-gray-600 rounded-full"></div>
                       <span>Appointment</span>
                     </div>
                   </div>
@@ -320,7 +320,7 @@ export function SkincareCalendar({
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               {status === "completed" ? (
-                                <CheckCircle className="h-5 w-5 text-green-600" />
+                                <CheckCircle className="h-5 w-5 text-blue-600" />
                               ) : (
                                 <Circle className="h-5 w-5 text-stone-400" />
                               )}
@@ -331,7 +331,7 @@ export function SkincareCalendar({
                             </div>
                             <Badge
                               variant={status === "completed" ? "default" : "secondary"}
-                              className={status === "completed" ? "bg-green-100 text-green-800" : ""}
+                              className={status === "completed" ? "bg-blue-100 text-blue-800" : ""}
                             >
                               {status === "completed"
                                 ? "Complete"

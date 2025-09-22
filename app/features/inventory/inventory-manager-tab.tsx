@@ -108,21 +108,12 @@ export function InventoryManagerTab({ onExpand, isFullScreen }: InventoryManager
                   size="sm"
                   variant="outline"
                   onClick={() => handleDelete(item.id, item.products.name)}
-                  className="border-red-200 text-red-600 hover:bg-red-50 bg-transparent ml-2"
+                  className="border-black text-black hover:bg-gray-100 bg-transparent ml-2"
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
 
-              <div className="mb-3">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-charcoal-700">Amount Remaining</span>
-                  <span className={`text-xs font-medium ${getAmountColor(item.amount_remaining)}`}>
-                    {item.amount_remaining}%
-                  </span>
-                </div>
-                <Progress value={item.amount_remaining} className="h-1.5" />
-              </div>
             </CardContent>
           </Card>
         )

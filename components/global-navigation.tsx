@@ -121,12 +121,12 @@ export function GlobalNavigation() {
   }
 
   return (
-    <nav className="bg-stone-50 border-b border-stone-200">
+    <nav className="bg-white border-b border-gray-200">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link
             href="/chat/new-session"
-            className="font-serif text-xl text-stone-800 hover:text-sage-700 transition-colors"
+            className="font-serif text-xl text-black hover:text-gray-800 transition-colors"
           >
             AI Skincare
           </Link>
@@ -141,8 +141,8 @@ export function GlobalNavigation() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`gap-2 text-stone-600 hover:text-sage-600 hover:bg-sage-50 transition-colors ${
-                      active ? "text-sage-700 bg-sage-100" : ""
+                    className={`gap-2 text-gray-600 hover:text-black hover:bg-gray-100 transition-colors ${
+                      active ? "text-black bg-gray-100" : ""
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -162,7 +162,7 @@ export function GlobalNavigation() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleQuickAction(action.prompt)}
-                  className="gap-2 text-stone-600 hover:text-sage-600 hover:bg-sage-50 transition-colors"
+                  className="gap-2 text-stone-600 hover:text-black hover:bg-gray-100 transition-colors"
                   title={`Ask: ${action.prompt}`}
                 >
                   <Icon className="h-4 w-4" />
@@ -184,7 +184,7 @@ export function GlobalNavigation() {
 
           <div className="lg:hidden flex items-center space-x-2">
             <Link href="/chat/new-session">
-              <Button variant="ghost" size="sm" className="text-sage-600 hover:text-sage-700 hover:bg-sage-50">
+              <Button variant="ghost" size="sm" className="text-black hover:text-gray-800 hover:bg-gray-100">
                 <MessageCircle className="h-4 w-4" />
               </Button>
             </Link>
