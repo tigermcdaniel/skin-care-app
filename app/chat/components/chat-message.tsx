@@ -436,7 +436,7 @@ export function ChatMessageComponent({
                 <button
                   key={index}
                   onClick={() => onAcceptRoutine(routine)}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-blue-200 hover:bg-blue-300 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2"
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>Accept Changes</span>
@@ -492,8 +492,8 @@ export function ChatMessageComponent({
                     disabled={isCompleted}
                     className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 ${
                       isCompleted
-                        ? "bg-green-100 text-green-800 cursor-not-allowed"
-                        : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                        ? "bg-gray-400 text-white cursor-not-allowed"
+                        : "bg-blue-200 hover:bg-blue-300 text-blue-800"
                     }`}
                   >
                     <CheckCircle className="w-4 h-4" />
@@ -529,10 +529,10 @@ export function ChatMessageComponent({
                         disabled={isCompleted}
                         className={`ml-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-2 self-end ${
                           isCompleted
-                            ? "bg-green-600 text-white cursor-default"
+                            ? "bg-gray-400 text-white cursor-default"
                             : action.action === "remove"
                               ? "bg-red-600 hover:bg-red-700 text-white"
-                              : "bg-green-600 hover:bg-green-700 text-white"
+                              : "bg-blue-200 hover:bg-blue-300 text-blue-800"
                         }`}
                       >
                         {isCompleted ? (
@@ -596,7 +596,7 @@ export function ChatMessageComponent({
       <div
         className={`max-w-3xl p-4 rounded-lg ${
           message.role === "user"
-            ? "bg-primary text-primary-foreground"
+            ? "bg-gray-200 text-gray-800"
             : "bg-muted text-foreground border border-border"
         }`}
       >

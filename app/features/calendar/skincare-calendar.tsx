@@ -36,7 +36,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarDays, Clock, User, CheckCircle, Circle, Expand } from "lucide-react"
+import { CalendarDays, Clock, User, CheckCircle, Circle } from "lucide-react"
 import Link from "next/link"
 
 interface Routine {
@@ -79,8 +79,6 @@ interface SkincareCalendarProps {
   appointments?: Appointment[]
   checkins?: DailyCheckin[]
   userId?: string
-  onExpand?: () => void
-  isFullScreen?: boolean
 }
 
 /**
@@ -110,8 +108,6 @@ interface SkincareCalendarProps {
  * @param {Appointment[]} props.appointments - Array of scheduled appointments
  * @param {DailyCheckin[]} props.checkins - Array of daily check-in records
  * @param {string} props.userId - User ID for data filtering
- * @param {Function} props.onExpand - Callback for expanding calendar view
- * @param {boolean} props.isFullScreen - Whether calendar is in full-screen mode
  * @returns {JSX.Element} Complete calendar interface with skincare data
  */
 export function SkincareCalendar({
@@ -119,8 +115,6 @@ export function SkincareCalendar({
   appointments,
   checkins,
   userId,
-  onExpand,
-  isFullScreen,
 }: SkincareCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [activeTab, setActiveTab] = useState("calendar")
@@ -222,23 +216,10 @@ export function SkincareCalendar({
 
   const morningRoutines = safeRoutines.filter((r) => r.type === "morning")
   const eveningRoutines = safeRoutines.filter((r) => r.type === "evening")
-  const upcomingAppointments = safeAppointments.slice(0, isFullScreen ? 10 : 5)
+  const upcomingAppointments = safeAppointments.slice(0, 5)
 
   return (
     <div className="space-y-6">
-      {!isFullScreen && onExpand && (
-        <div className="flex justify-end mb-4">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onExpand}
-            className="border-stone-200 text-charcoal-600 hover:bg-stone-50 bg-transparent"
-          >
-            <Expand className="h-3 w-3 mr-1" />
-            Expand
-          </Button>
-        </div>
-      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-2">
@@ -247,9 +228,9 @@ export function SkincareCalendar({
         </TabsList>
 
         <TabsContent value="calendar" className="space-y-6">
-          <div className={`grid grid-cols-1 ${isFullScreen ? "lg:grid-cols-2" : ""} gap-6`}>
+          <div className="grid grid-cols-1 gap-6">
             {/* Calendar */}
-            <div className={isFullScreen ? "lg:col-span-1" : ""}>
+            <div>
               <Card className="border-0 shadow-sm bg-stone-50">
                 <CardHeader>
                   <CardTitle className="font-serif text-charcoal-800">
@@ -263,7 +244,7 @@ export function SkincareCalendar({
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className={isFullScreen ? "" : "scale-90 origin-top"}>
+                  <div className="scale-90 origin-top">
                     <Calendar
                       mode="single"
                       selected={selectedDate}
@@ -273,7 +254,7 @@ export function SkincareCalendar({
                         DayButton: ({ day, ...props }) => (
                           <Button
                             variant="ghost"
-                            className={`${isFullScreen ? "h-12 w-12" : "h-10 w-10"} p-0 font-normal aria-selected:opacity-100`}
+                            className="h-10 w-10 p-0 font-normal aria-selected:opacity-100"
                             {...props}
                           >
                             {renderDayContent(day.date)}
@@ -347,7 +328,7 @@ export function SkincareCalendar({
                               <div className="space-y-1">
                                 {routine.routine_steps
                                   .sort((a, b) => a.step_order - b.step_order)
-                                  .slice(0, isFullScreen ? 8 : 5)
+                                  .slice(0, 5)
                                   .map((step) => (
                                     <div key={step.id} className="flex items-start gap-2 text-sm">
                                       <span className="text-charcoal-500 font-medium min-w-[20px]">
@@ -365,9 +346,9 @@ export function SkincareCalendar({
                                       </div>
                                     </div>
                                   ))}
-                                {routine.routine_steps.length > (isFullScreen ? 8 : 5) && (
+                                {routine.routine_steps.length > 5 && (
                                   <p className="text-sm text-charcoal-500 pl-6">
-                                    +{routine.routine_steps.length - (isFullScreen ? 8 : 5)} more steps
+                                    +{routine.routine_steps.length - 5} more steps
                                   </p>
                                 )}
                               </div>
@@ -467,7 +448,7 @@ export function SkincareCalendar({
                           </div>
                           {appointment.notes && (
                             <p
-                              className={`text-sm text-charcoal-600 mt-2 italic ${isFullScreen ? "" : "line-clamp-2"}`}
+                              className="text-sm text-charcoal-600 mt-2 italic line-clamp-2"
                             >
                               {appointment.notes}
                             </p>

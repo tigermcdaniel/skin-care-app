@@ -73,22 +73,22 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
   const dayNames = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
   return (
-    <Card className="border-blue-200 bg-blue-50">
+    <Card className="border-gray-200 bg-gray-50">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
             <CardTitle className="text-lg font-serif text-charcoal-900 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-blue-600" />
+              <Calendar className="h-5 w-5 text-black" />
               {suggestion.title}
             </CardTitle>
             <p className="text-sm text-charcoal-600">{suggestion.description}</p>
-            <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs">Weekly Routine Suggestion</Badge>
+            <Badge className="bg-gray-100 text-gray-800 border-gray-200 text-xs">Weekly Routine Suggestion</Badge>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-charcoal-600 hover:bg-blue-100"
+            className="text-charcoal-600 hover:bg-gray-100"
           >
             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
@@ -97,7 +97,7 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
 
       <CardContent className="space-y-4">
         {/* Reasoning */}
-        <div className="p-3 bg-white rounded-lg border border-blue-200">
+        <div className="p-3 bg-white rounded-lg border border-gray-200">
           <h4 className="text-sm font-medium text-charcoal-800 mb-2">Why this routine?</h4>
           <p className="text-sm text-charcoal-600">{suggestion.reasoning}</p>
         </div>
@@ -118,7 +118,7 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
                       {/* Morning */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Sun className="h-3 w-3 text-yellow-500" />
+                          <Sun className="h-3 w-3 text-black" />
                           <span className="text-xs font-medium text-charcoal-700">Morning</span>
                         </div>
                         <div className="space-y-1">
@@ -138,7 +138,7 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
                       {/* Evening */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Moon className="h-3 w-3 text-purple-500" />
+                          <Moon className="h-3 w-3 text-black" />
                           <span className="text-xs font-medium text-charcoal-700">Evening</span>
                         </div>
                         <div className="space-y-1">
@@ -168,7 +168,7 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
             <Button
               onClick={handleApprove}
               disabled={isProcessing}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              className="flex-1 bg-blue-200 hover:bg-blue-300 text-blue-800"
             >
               <Check className="h-4 w-4 mr-2" />
               {isProcessing ? "Approving..." : "Approve & Apply"}
@@ -177,7 +177,7 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
               onClick={handleDeny}
               disabled={isProcessing}
               variant="outline"
-              className="flex-1 border-red-200 text-red-600 hover:bg-red-50 bg-transparent"
+              className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent"
             >
               <X className="h-4 w-4 mr-2" />
               {isProcessing ? "Denying..." : "Deny"}
@@ -186,14 +186,14 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
         )}
 
         {isApproved && (
-          <div className="flex items-center gap-2 pt-2 text-green-600">
+          <div className="flex items-center gap-2 pt-2 text-blue-600">
             <Check className="h-4 w-4" />
             <span className="text-sm font-medium">Routine approved and applied to your schedule</span>
           </div>
         )}
 
         {isDenied && (
-          <div className="flex items-center gap-2 pt-2 text-red-600">
+          <div className="flex items-center gap-2 pt-2 text-gray-600">
             <X className="h-4 w-4" />
             <span className="text-sm font-medium">Routine suggestion denied</span>
           </div>

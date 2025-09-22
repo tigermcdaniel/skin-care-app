@@ -29,11 +29,9 @@ interface Appointment {
 }
 
 interface TreatmentsTabProps {
-  onExpand?: () => void
-  isFullScreen?: boolean
 }
 
-export function TreatmentsTab({ onExpand, isFullScreen = false }: TreatmentsTabProps) {
+export function TreatmentsTab({}: TreatmentsTabProps) {
   const [treatments, setTreatments] = useState<Treatment[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,7 +93,7 @@ export function TreatmentsTab({ onExpand, isFullScreen = false }: TreatmentsTabP
     (apt) => (apt.status === "scheduled" && new Date(apt.scheduled_date) < new Date()) || apt.status === "completed",
   )
 
-  const pastTreatments = treatments.slice(0, isFullScreen ? 10 : 3)
+  const pastTreatments = treatments.slice(0, 3)
 
   if (loading) {
     return (
@@ -111,20 +109,9 @@ export function TreatmentsTab({ onExpand, isFullScreen = false }: TreatmentsTabP
   }
 
   return (
-    <div className={`space-y-4 ${isFullScreen ? "max-w-6xl mx-auto" : ""}`}>
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-serif text-charcoal-900">Treatments</h3>
-        <div className="flex items-center space-x-2">
-          {!isFullScreen && onExpand && (
-            <button
-              onClick={onExpand}
-              className="p-1 text-stone-500 hover:text-charcoal-900 transition-colors"
-              title="Expand"
-            >
-              <Expand className="w-4 h-4" />
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -170,12 +157,12 @@ export function TreatmentsTab({ onExpand, isFullScreen = false }: TreatmentsTabP
                 </button>
               </div>
             ) : (
-              upcomingAppointments.slice(0, isFullScreen ? 10 : 3).map((appointment) => (
-                <Card key={appointment.id} className="border-l-4 border-l-green-500">
+              upcomingAppointments.slice(0, 3).map((appointment) => (
+                <Card key={appointment.id} className="border-l-4 border-l-blue-500">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-medium">{appointment.treatment_type}</CardTitle>
-                      <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                      <Badge variant="outline" className="text-xs text-blue-600 border-blue-600">
                         <CheckCircle className="w-3 h-3 mr-1" />
                         Scheduled
                       </Badge>
@@ -212,12 +199,12 @@ export function TreatmentsTab({ onExpand, isFullScreen = false }: TreatmentsTabP
               </div>
             ) : (
               <>
-                {pastAppointments.slice(0, isFullScreen ? 10 : 3).map((appointment) => (
-                  <Card key={`appointment-${appointment.id}`} className="border-l-4 border-l-blue-500">
+                {pastAppointments.slice(0, 3).map((appointment) => (
+                  <Card key={`appointment-${appointment.id}`} className="border-l-4 border-l-black">
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-sm font-medium">{appointment.treatment_type}</CardTitle>
-                        <Badge variant="outline" className="text-xs text-blue-600 border-blue-600">
+                        <Badge variant="outline" className="text-xs text-black border-black">
                           <CheckCircle className="w-3 h-3 mr-1" />
                           {appointment.status === "completed" ? "Completed" : "Past"}
                         </Badge>
@@ -262,11 +249,8 @@ export function TreatmentsTab({ onExpand, isFullScreen = false }: TreatmentsTabP
                     <CardContent className="pt-0">
                       <div className="flex items-center justify-between">
                         <div>
-                          {treatment.notes && !isFullScreen && (
+                          {treatment.notes && (
                             <p className="text-xs text-stone-600 mb-1 line-clamp-1">{treatment.notes}</p>
-                          )}
-                          {treatment.notes && isFullScreen && (
-                            <p className="text-xs text-stone-600 mb-1">{treatment.notes}</p>
                           )}
                           {treatment.cost && <p className="text-xs font-medium">${treatment.cost}</p>}
                         </div>

@@ -9,8 +9,6 @@ import { Sun, Moon, Check, ChevronDown, ChevronUp, Edit3, Save, X, Plus, Trash2 
 import { useSkincareData } from "@/app/features/shared/contexts/skincare-data-context"
 
 interface WeeklyRoutineTabProps {
-  onExpand?: () => void
-  isFullScreen?: boolean
 }
 
 interface DayRoutine {
@@ -22,7 +20,7 @@ interface DayRoutine {
   eveningCompleted: boolean
 }
 
-export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabProps) {
+export function WeeklyRoutineTab() {
   const { routines, checkIns, inventory, isLoading, markRoutineComplete } = useSkincareData()
   const [expandedDay, setExpandedDay] = useState<string | null>(null)
   const [customizedSteps, setCustomizedSteps] = useState<Record<string, string>>({})
@@ -226,16 +224,6 @@ export function WeeklyRoutineTab({ onExpand, isFullScreen }: WeeklyRoutineTabPro
         <div>
           <h2 className="text-xl font-serif font-semibold text-charcoal-900">Weekly Routine Schedule</h2>
         </div>
-        {!isFullScreen && onExpand && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onExpand}
-            className="border-stone-200 text-charcoal-600 hover:bg-stone-50 bg-transparent"
-          >
-            Expand View
-          </Button>
-        )}
       </div>
 
       <div className="grid gap-4">

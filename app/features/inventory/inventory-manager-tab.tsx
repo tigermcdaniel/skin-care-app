@@ -4,15 +4,10 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Package, MessageCircle, AlertTriangle, Expand, Trash2 } from "lucide-react"
+import { Package, MessageCircle, AlertTriangle, Trash2 } from "lucide-react"
 import { useSkincareData } from "@/app/features/shared/contexts/skincare-data-context"
 
-interface InventoryManagerTabProps {
-  onExpand?: () => void
-  isFullScreen?: boolean
-}
-
-export function InventoryManagerTab({ onExpand, isFullScreen }: InventoryManagerTabProps) {
+export function InventoryManagerTab() {
   const { inventory, isLoading, markProductAsUsed, deleteProductFromInventory } = useSkincareData()
 
   const handleMarkAsUsed = async (itemId: string, currentAmount: number) => {
@@ -60,19 +55,6 @@ export function InventoryManagerTab({ onExpand, isFullScreen }: InventoryManager
 
   return (
     <div className="space-y-4">
-      {!isFullScreen && onExpand && (
-        <div className="flex justify-end mb-4">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onExpand}
-            className="border-stone-200 text-charcoal-600 hover:bg-stone-50 bg-transparent"
-          >
-            <Expand className="h-3 w-3 mr-1" />
-            Expand
-          </Button>
-        </div>
-      )}
 
       {inventory.map((item) => {
         const needsReorder = item.amount_remaining <= 20
@@ -82,7 +64,7 @@ export function InventoryManagerTab({ onExpand, isFullScreen }: InventoryManager
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h3 className={`font-serif text-base text-charcoal-800 ${isFullScreen ? "" : "line-clamp-1"}`}>
+                  <h3 className={`font-serif text-base text-charcoal-800 "line-clamp-1"}`}>
                     {item.products.name}
                   </h3>
                   <p className="text-sm text-charcoal-600">{item.products.brand}</p>
@@ -97,8 +79,8 @@ export function InventoryManagerTab({ onExpand, isFullScreen }: InventoryManager
                       </Badge>
                     )}
                   </div>
-                  {isFullScreen && item.notes && <p className="text-xs text-charcoal-500 mt-2">{item.notes}</p>}
-                  {isFullScreen && item.purchase_date && (
+                  { item.notes && <p className="text-xs text-charcoal-500 mt-2">{item.notes}</p>}
+                  { item.purchase_date && (
                     <p className="text-xs text-charcoal-500 mt-1">
                       Purchased: {new Date(item.purchase_date).toLocaleDateString()}
                     </p>

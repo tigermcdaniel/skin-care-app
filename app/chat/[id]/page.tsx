@@ -49,6 +49,7 @@ const QUICK_COMMANDS = [
   "Help me build a routine.",
   "What is in my cabinet?",
   "Do i have any upcoming appointments?",
+  "Let's add a product to my cabinet.",
 ]
 
 /**
@@ -100,7 +101,6 @@ function ChatConversationPageContent() {
   const supabase = createClient()
 
   const [activeTab, setActiveTab] = useState<TabType | null>(null)
-  const [isFullScreen, setIsFullScreen] = useState(false)
 
   const [tabPanelWidth, setTabPanelWidth] = useState(384) // Default 384px (w-96)
   const [isResizing, setIsResizing] = useState(false)
@@ -511,20 +511,11 @@ function ChatConversationPageContent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const handleExpandTab = (tab: TabType) => {
-    setActiveTab(tab)
-    setIsFullScreen(true)
-  }
 
   const handleSwitchTab = (tab: TabType) => {
     setActiveTab(tab)
-    setIsFullScreen(false)
   }
 
-  const handleReturnToChat = () => {
-    setIsFullScreen(false)
-    setActiveTab("routines")
-  }
 
   const handleLogout = async () => {
     try {
@@ -655,54 +646,27 @@ function ChatConversationPageContent() {
 
   return (
     <div className="min-h-screen bg-stone-50 flex">
-      {isFullScreen && (
-        <button
-          onClick={handleReturnToChat}
-          className="fixed left-4 top-4 z-50 bg-sage-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-sage-700 transition-colors flex items-center space-x-2"
-        >
-          <span>← Open Chat</span>
-        </button>
-      )}
 
       <div
-        className={`flex-1 flex flex-col ${isFullScreen ? "hidden" : ""} transition-all duration-300`}
+        className="flex-1 flex flex-col transition-all duration-300"
         style={{
-          marginRight: !isFullScreen && activeTab ? `${tabPanelWidth}px` : "0px",
+          marginRight: activeTab ? `${tabPanelWidth}px` : "0px",
         }}
       >
-        <div className="sticky top-0 z-30 bg-white border-b border-stone-200 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-serif text-charcoal-900">Skincare Advisor</h1>
-            <div className="flex items-center space-x-4">
-              {activeTab && (
-                <button
-                  onClick={() => {
-                    setActiveTab("routines")
-                    setIsFullScreen(false)
-                  }}
-                  className="text-sm text-stone-600 hover:text-charcoal-900 transition-colors"
-                >
-                  Reset View
-                </button>
-              )}
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-stone-600 hover:text-red-600 transition-colors"
-                title="Logout"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="flex space-x-1 bg-stone-100 p-1 rounded-lg">
+        <div className="sticky top-0 z-30 p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white/90 backdrop-blur-sm rounded-full px-8 py-4 shadow-lg border border-gray-200 flex items-center justify-between">
+              {/* Left Section - Title */}
+              <h1 className="text-xl font-serif text-charcoal-900">Skincare Advisor</h1>
+              
+              {/* Center Section - Tab Navigation */}
+              <div className="flex items-center space-x-1">
             <button
               onClick={() => handleSwitchTab("routines")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "routines"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
+                  ? "bg-gray-100 text-black shadow-sm"
+                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
               }`}
             >
               <BookOpen className="w-4 h-4" />
@@ -712,8 +676,8 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("collection")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "collection"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
+                  ? "bg-gray-100 text-black shadow-sm"
+                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
               }`}
             >
               <SquareChartGantt className="w-4 h-4" />
@@ -723,8 +687,8 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("calendar")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "calendar"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
+                  ? "bg-gray-100 text-black shadow-sm"
+                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
               }`}
             >
               <Calendar className="w-4 h-4" />
@@ -734,8 +698,8 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("treatments")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "treatments"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
+                  ? "bg-gray-100 text-black shadow-sm"
+                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
               }`}
             >
               <Stethoscope className="w-4 h-4" />
@@ -745,13 +709,27 @@ function ChatConversationPageContent() {
               onClick={() => handleSwitchTab("checkin")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === "checkin"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-stone-50"
+                  ? "bg-gray-100 text-black shadow-sm"
+                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
               }`}
             >
               <ClipboardCheck className="w-4 h-4" />
               <span>Check-in</span>
             </button>
+              </div>
+              
+              {/* Right Section - Controls */}
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-3 py-2 text-sm text-stone-600 hover:text-red-600 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -819,7 +797,7 @@ function ChatConversationPageContent() {
         />
       </div>
 
-      {activeTab && !isFullScreen && (
+      {activeTab && (
         <div
           ref={resizeRef}
           className="fixed top-0 w-1 h-full bg-stone-300 hover:bg-sage-400 cursor-col-resize z-40 transition-colors"
@@ -832,9 +810,9 @@ function ChatConversationPageContent() {
 
       {activeTab && (
         <div
-          className={`${isFullScreen ? "fixed inset-0 z-40" : "fixed right-0 top-0 h-full"} bg-white ${isFullScreen ? "" : "border-l border-stone-200 shadow-lg"} z-50`}
+          className="fixed right-0 top-0 h-full bg-white border-l border-stone-200 shadow-lg z-50"
           style={{
-            width: isFullScreen ? "100%" : `${tabPanelWidth}px`,
+            width: `${tabPanelWidth}px`,
           }}
         >
           <div className="p-4 border-b border-stone-200">
@@ -855,10 +833,10 @@ function ChatConversationPageContent() {
           </div>
           <div className="h-full overflow-y-auto p-4">
             {activeTab === "routines" && (
-              <WeeklyRoutineTab onExpand={() => handleExpandTab("routines")} isFullScreen={isFullScreen} />
+              <WeeklyRoutineTab />
             )}
             {activeTab === "collection" && (
-              <InventoryManagerTab onExpand={() => handleExpandTab("collection")} isFullScreen={isFullScreen} />
+              <InventoryManagerTab />
             )}
             {activeTab === "calendar" && (
               <SkincareCalendar
@@ -869,15 +847,13 @@ function ChatConversationPageContent() {
                 appointments={appointments || []}
                 checkins={checkins || []}
                 userId={user?.id}
-                onExpand={() => handleExpandTab("calendar")}
-                isFullScreen={isFullScreen}
               />
             )}
             {activeTab === "treatments" && (
-              <TreatmentsTab onExpand={() => handleExpandTab("treatments")} isFullScreen={isFullScreen} />
+              <TreatmentsTab />
             )}
             {activeTab === "checkin" && (
-              <CheckInTab onExpand={() => handleExpandTab("checkin")} isFullScreen={isFullScreen} />
+              <CheckInTab />
             )}
           </div>
         </div>

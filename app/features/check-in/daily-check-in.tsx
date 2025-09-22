@@ -267,15 +267,6 @@ export function DailyCheckIn({ existingCheckin, userId }: DailyCheckInProps) {
     <div className="min-h-screen overflow-y-auto pb-24">
       <div className="max-w-2xl mx-auto space-y-6 p-4">
         <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Camera className="w-5 h-5 text-sage-600" />
-              Daily Skin Check-In
-            </CardTitle>
-            <CardDescription>
-              Upload photos of your skin for AI analysis and personalized routine suggestions
-            </CardDescription>
-          </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
