@@ -520,7 +520,7 @@ function ChatConversationPageContent() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut()
-      router.push("/auth/login")
+      router.push("/")
     } catch (error) {
       console.error("Error logging out:", error)
     }
@@ -653,14 +653,14 @@ function ChatConversationPageContent() {
           marginRight: activeTab ? `${tabPanelWidth}px` : "0px",
         }}
       >
-        <div className="sticky top-0 z-30 p-6">
+        <div className="sticky top-0 z-30 p-4 sm:p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full px-8 py-4 shadow-lg border border-gray-200 flex items-center justify-between">
+            <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 sm:px-6 md:px-8 py-3 sm:py-4 shadow-lg border border-gray-200 flex items-center justify-between">
               {/* Left Section - Title */}
-              <h1 className="text-xl font-serif text-charcoal-900">Skincare Advisor</h1>
+              <h1 className="text-lg sm:text-xl font-serif text-charcoal-900">Skincare Advisor</h1>
               
               {/* Center Section - Tab Navigation */}
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-1 overflow-x-auto">
             <button
               onClick={() => handleSwitchTab("routines")}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${

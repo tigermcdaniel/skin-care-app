@@ -30,10 +30,10 @@ export default async function LandingPage() {
   return (
     <div>
       {/* First Page - Hero Section with Video Background */}
-      <div className="relative h-screen p-8">
+      <div className="relative h-screen p-4 sm:p-6 md:p-8">
         {/* Video Background with soft border */}
         <div 
-          className="bunny-vids absolute inset-8 w-auto h-auto rounded-3xl overflow-hidden shadow-2xl border-4 border-white/20"
+          className="bunny-vids absolute inset-4 sm:inset-6 md:inset-8 w-auto h-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 sm:border-4 border-white/20"
         >
           <video 
             autoPlay={true}
@@ -62,18 +62,18 @@ export default async function LandingPage() {
         {/* Hero Content Overlay */}
         <div className="relative z-10 h-full flex flex-col">
         {/* Header */}
-        <header className="px-6 py-8">
+        <header className="px-4 sm:px-6 py-4 sm:py-6 md:py-8">
           <div className="max-w-7xl mx-auto">
-            <div className="bg-black/90 backdrop-blur-sm rounded-full px-8 py-4 shadow-lg border border-gray-800 flex items-center justify-between">
+            <div className="bg-black/90 backdrop-blur-sm rounded-full px-4 sm:px-6 md:px-8 py-3 sm:py-4 shadow-lg border border-gray-800 flex items-center justify-between">
               <div className="flex items-center">
                 <span className="text-xl font-serif text-white">AI Skincare</span>
               </div>
               
-              <div className="flex items-center space-x-6">
-                <Link href="/auth/login" className="text-white/80 hover:text-white transition-colors">
+              <div className="flex items-center space-x-3 sm:space-x-6">
+                <Link href="/auth/login" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">
                   Sign In
                 </Link>
-                <Button asChild className="bg-white hover:bg-gray-100 text-black px-6 py-2 rounded-full border border-white transition-all duration-200 hover:scale-105">
+                <Button asChild className="bg-white hover:bg-gray-100 text-black px-4 sm:px-6 py-2 rounded-full border border-white transition-all duration-200 hover:scale-105 text-sm sm:text-base">
                   <Link href="/auth/sign-up">Get Started</Link>
                 </Button>
               </div>
@@ -82,7 +82,7 @@ export default async function LandingPage() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex items-center justify-center px-6 py-16">
+        <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 md:py-16">
           <div className="max-w-4xl mx-auto text-center">
             {/* Hero Badge */}
             <div className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-sage-200 mb-8">
@@ -91,19 +91,19 @@ export default async function LandingPage() {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-6xl md:text-7xl font-serif font-light text-charcoal-800 mb-8 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-light text-charcoal-800 mb-6 sm:mb-8 leading-tight">
               Unlock your new
               <br />
               <span className="text-sage-600">skin intelligence</span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-xl md:text-2xl text-charcoal-600 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
+            <p className="text-lg sm:text-xl md:text-2xl text-charcoal-600 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed font-light">
               Reimaging what skincare looks like.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-64">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-32 sm:mb-48 md:mb-64">
               <Button 
                 asChild 
                 size="lg" 
