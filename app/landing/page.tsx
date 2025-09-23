@@ -10,6 +10,7 @@ import { createClient } from "@/integrations/supabase/server"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { GlobalNavigation } from "@/components/global-navigation"
 
 export default async function LandingPage() {
   // Check if user is authenticated and redirect if they are
@@ -62,24 +63,7 @@ export default async function LandingPage() {
         {/* Hero Content Overlay */}
         <div className="relative z-10 h-full flex flex-col">
         {/* Header */}
-        <header className="px-4 sm:px-6 py-4 sm:py-6 md:py-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-black/90 backdrop-blur-sm rounded-full px-4 sm:px-6 md:px-8 py-3 sm:py-4 shadow-lg border border-gray-800 flex items-center justify-between">
-              <div className="flex items-center">
-                <span className="text-xl font-serif text-white">AI Skincare</span>
-              </div>
-              
-              <div className="flex items-center space-x-3 sm:space-x-6">
-                <Link href="/auth/login" className="text-white/80 hover:text-white transition-colors text-sm sm:text-base">
-                  Sign In
-                </Link>
-                <Button asChild className="bg-white hover:bg-gray-100 text-black px-4 sm:px-6 py-2 rounded-full border border-white transition-all duration-200 hover:scale-105 text-sm sm:text-base">
-                  <Link href="/auth/sign-up">Get Started</Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
+        <GlobalNavigation currentPage="home" />
 
         {/* Main Content */}
         <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 md:py-16">
