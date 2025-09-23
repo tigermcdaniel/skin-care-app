@@ -31,10 +31,10 @@ export default async function LandingPage() {
   return (
     <div>
       {/* First Page - Hero Section with Video Background */}
-      <div className="relative h-screen p-4 sm:p-6 md:p-8">
+      <div className="relative h-screen p-0 sm:p-6 md:p-8">
         {/* Video Background with soft border */}
         <div 
-          className="bunny-vids absolute inset-4 sm:inset-6 md:inset-8 w-auto h-auto rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 sm:border-4 border-white/20"
+          className="bunny-vids absolute inset-0 sm:inset-6 md:inset-8 w-auto h-auto rounded-none sm:rounded-3xl overflow-hidden shadow-2xl border-white/20"
         >
           <video 
             autoPlay={true}
