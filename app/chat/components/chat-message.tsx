@@ -1,9 +1,12 @@
 "use client"
 import { Bot, CheckCircle, Stethoscope, ClipboardCheck, Minus, Plus, Calendar, Camera, Check } from "lucide-react"
 import { RoutineApprovalCard } from "@/app/features/routines/components/routine-approval-card"
-import { useState } from "react"
+import { LoadingBubble } from "./loading-bubble"
+import { isStreamingComponents, getStreamingComponentType, getComponentLoadingMessage, extractTextBeforeComponents } from "../lib/component-detector"
+import { useState, useEffect, useRef, useMemo } from "react"
 
 import { generateUUID } from "@/lib/uuid"
+
 
 interface ChatMessage {
   id: string
@@ -92,7 +95,7 @@ interface WeeklyRoutineSuggestion {
 
 interface ChatMessageProps {
   message: ChatMessage
-  onAddProduct: (product: ProductRecommendation) => void
+  onAddProduct: (product: ProductRecommendation, index?: number) => void
   onAcceptRoutine: (routine: RoutineUpdate) => void
   onCompleteRoutine: (action: RoutineAction) => void
   onCabinetAction: (action: CabinetAction) => void
@@ -102,6 +105,7 @@ interface ChatMessageProps {
   onTreatmentSuggestion: (treatment: TreatmentSuggestion) => void
   isLoading: boolean
   checkIns?: any[]
+  inventory?: any[]
 }
 
 const formatMarkdown = (text: string) => {
@@ -267,8 +271,14 @@ export function ChatMessageComponent({
   onTreatmentSuggestion,
   isLoading,
   checkIns,
+  inventory = [],
 }: ChatMessageProps) {
   const [completedCabinetActions, setCompletedCabinetActions] = useState<Set<string>>(new Set())
+
+
+  // Memoize inventory data to prevent unnecessary re-renders
+  const inventoryData = useMemo(() => inventory, [inventory])
+
 
   const handleApproveRoutine = async (suggestionId: string, routineData: WeeklyRoutineSuggestion) => {
     try {
@@ -327,7 +337,35 @@ export function ChatMessageComponent({
     }
   }
 
+  const isProductInInventory = (product: ProductRecommendation) => {
+    if (!inventoryData || inventoryData.length === 0) return false
+    
+    return inventoryData.some(item => 
+      item.products?.name?.toLowerCase() === product.name.toLowerCase() &&
+      item.products?.brand?.toLowerCase() === product.brand.toLowerCase()
+    )
+  }
+
+  const isProductCompleted = (product: ProductRecommendation, index: number) => {
+    // Check if the product has been marked as added in the message content
+    return (product as any).added === true
+  }
+
+  const handleProductAdditionWithConfirmation = async (product: ProductRecommendation, index: number) => {
+    try {
+      await onAddProduct(product, index)
+    } catch (error) {
+      console.error("Product addition failed:", error)
+    }
+  }
+
   if (message.role === "assistant") {
+    // Check if we're currently streaming components
+    const isStreaming = isStreamingComponents(message.content)
+    const componentType = getStreamingComponentType(message.content)
+    const loadingMessage = getComponentLoadingMessage(componentType)
+    const textBeforeComponents = extractTextBeforeComponents(message.content)
+
     const {
       products,
       routines,
@@ -359,22 +397,31 @@ export function ChatMessageComponent({
                 className="text-sm text-foreground leading-relaxed"
                 dangerouslySetInnerHTML={{
                   __html: formatMarkdown(
-                    message.content
-                      .replace(/\[PRODUCT\]\{.*?\}\[\/PRODUCT\]/g, "")
-                      .replace(/\[ROUTINE\]\{.*?\}\[\/ROUTINE\]/g, "")
-                      .replace(/\[TREATMENT\]\{.*?\}\[\/TREATMENT\]/g, "")
-                      .replace(/\[GOAL\]\{.*?\}\[\/GOAL\]/g, "")
-                      .replace(/\[ROUTINE_ACTION\]\{.*?\}\[\/ROUTINE_ACTION\]/g, "")
-                      .replace(/\[CABINET_ACTION\]\{.*?\}\[\/CABINET_ACTION\]/g, "")
-                      .replace(/\[APPOINTMENT_ACTION\]\{.*?\}\[\/APPOINTMENT_ACTION\]/g, "")
-                      .replace(/\[CHECKIN_ACTION\]\{.*?\}\[\/CHECKIN_ACTION\]/g, "")
-                      .replace(/\[WEEKLY_ROUTINE\].*?\[\/WEEKLY_ROUTINE\]/gs, "")
-                      .replace(/\[PRODUCT\]([^[]+)\[\/PRODUCT\]/g, "$1"),
+                    // If streaming components, show only the text before components
+                    // Otherwise, show the full content with components removed
+                    isStreaming && isLoading 
+                      ? textBeforeComponents
+                      : message.content
+                        .replace(/\[PRODUCT\]\{.*?\}\[\/PRODUCT\]/g, "")
+                        .replace(/\[ROUTINE\]\{.*?\}\[\/ROUTINE\]/g, "")
+                        .replace(/\[TREATMENT\]\{.*?\}\[\/TREATMENT\]/g, "")
+                        .replace(/\[GOAL\]\{.*?\}\[\/GOAL\]/g, "")
+                        .replace(/\[ROUTINE_ACTION\]\{.*?\}\[\/ROUTINE_ACTION\]/g, "")
+                        .replace(/\[CABINET_ACTION\]\{.*?\}\[\/CABINET_ACTION\]/g, "")
+                        .replace(/\[APPOINTMENT_ACTION\]\{.*?\}\[\/APPOINTMENT_ACTION\]/g, "")
+                        .replace(/\[CHECKIN_ACTION\]\{.*?\}\[\/CHECKIN_ACTION\]/g, "")
+                        .replace(/\[WEEKLY_ROUTINE\].*?\[\/WEEKLY_ROUTINE\]/gs, "")
+                        .replace(/\[PRODUCT\]([^[]+)\[\/PRODUCT\]/g, "$1"),
                   ),
                 }}
               />
             </div>
           </div>
+
+          {/* Show loading animation when streaming components */}
+          {isStreaming && isLoading && (
+            <LoadingBubble message={loadingMessage} />
+          )}
 
           {weeklyRoutines.length > 0 && (
             <div className="space-y-3">
@@ -395,35 +442,52 @@ export function ChatMessageComponent({
 
           {products.length > 0 && (
             <div className="space-y-2">
-              {products.map((product, index) => (
-                <div key={index} className="bg-muted/50 rounded-lg p-3 border border-border">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-foreground">{product.name}</h4>
-                      <p className="text-sm text-muted-foreground mb-1">by {product.brand}</p>
-                      <p className="text-xs text-muted-foreground mb-2">{product.description}</p>
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {product.key_ingredients.map((ingredient, i) => (
-                          <span
-                            key={i}
-                            className="text-xs bg-background px-2 py-1 rounded-full text-muted-foreground border"
-                          >
-                            {ingredient}
-                          </span>
-                        ))}
+              {products.map((product, index) => {
+                const productKey = `${product.name}-${product.brand}-${index}`
+                const isCompleted = isProductCompleted(product, index)
+                
+                
+                return (
+                  <div key={`${product.name}-${product.brand}-${index}`} className="bg-muted/50 rounded-lg p-3 border border-border">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-foreground">{product.name}</h4>
+                        <p className="text-sm text-muted-foreground mb-1">by {product.brand}</p>
+                        <p className="text-xs text-muted-foreground mb-2">{product.description}</p>
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {product.key_ingredients.map((ingredient, i) => (
+                            <span
+                              key={i}
+                              className="text-xs bg-background px-2 py-1 rounded-full text-muted-foreground border"
+                            >
+                              {ingredient}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground italic">{product.reason}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground italic">{product.reason}</p>
+                      <button
+                        onClick={() => handleProductAdditionWithConfirmation(product, index)}
+                        disabled={isCompleted || isLoading}
+                        className={`ml-3 px-3 py-1 text-xs rounded-md transition-colors flex items-center space-x-1 ${
+                          isCompleted
+                            ? "bg-gray-400 text-white cursor-default"
+                            : "bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <>
+                            <Check className="w-3 h-3" />
+                            <span>Added</span>
+                          </>
+                        ) : (
+                          <span>Add to Collection</span>
+                        )}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => onAddProduct(product)}
-                      disabled={isLoading}
-                      className="ml-3 px-3 py-1 bg-primary hover:bg-primary/90 text-primary-foreground text-xs rounded-md transition-colors disabled:opacity-50"
-                    >
-                      Add to Collection
-                    </button>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 

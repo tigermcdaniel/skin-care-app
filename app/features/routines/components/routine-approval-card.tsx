@@ -42,31 +42,32 @@ interface RoutineApprovalCardProps {
 
 export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineApprovalCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isApproving, setIsApproving] = useState(false)
+  const [isDenying, setIsDenying] = useState(false)
   const [isApproved, setIsApproved] = useState(false)
   const [isDenied, setIsDenied] = useState(false)
 
   const handleApprove = async () => {
-    setIsProcessing(true)
+    setIsApproving(true)
     try {
       await onApprove(suggestion.id)
       setIsApproved(true)
     } catch (error) {
       console.error("Error approving routine:", error)
     } finally {
-      setIsProcessing(false)
+      setIsApproving(false)
     }
   }
 
   const handleDeny = async () => {
-    setIsProcessing(true)
+    setIsDenying(true)
     try {
       await onDeny(suggestion.id)
       setIsDenied(true)
     } catch (error) {
       console.error("Error denying routine:", error)
     } finally {
-      setIsProcessing(false)
+      setIsDenying(false)
     }
   }
 
@@ -167,20 +168,20 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-2">
             <Button
               onClick={handleApprove}
-              disabled={isProcessing}
+              disabled={isApproving || isDenying}
               className="flex-1 bg-blue-200 hover:bg-blue-300 text-blue-800 text-sm sm:text-base"
             >
               <Check className="h-4 w-4 mr-2" />
-              <span className="truncate">{isProcessing ? "Approving..." : "Approve & Apply"}</span>
+              <span className="truncate">{isApproving ? "Approving..." : "Approve & Apply"}</span>
             </Button>
             <Button
               onClick={handleDeny}
-              disabled={isProcessing}
+              disabled={isApproving || isDenying}
               variant="outline"
               className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent text-sm sm:text-base"
             >
               <X className="h-4 w-4 mr-2" />
-              <span className="truncate">{isProcessing ? "Denying..." : "Deny"}</span>
+              <span className="truncate">{isDenying ? "Denying..." : "Deny"}</span>
             </Button>
           </div>
         )}

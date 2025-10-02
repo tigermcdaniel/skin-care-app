@@ -84,6 +84,7 @@ function ChatConversationPageContent() {
   const [isResizing, setIsResizing] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(0) // Force re-render during resize
   const resizeRef = useRef<HTMLDivElement>(null)
+  
 
   const {
     routines,
@@ -266,24 +267,106 @@ function ChatConversationPageContent() {
     setShowActionTriggers(false)
   }
 
-  const handleAddProduct = async (product: any) => {
+  const handleAddProduct = async (product: any, index: number = 0) => {
     try {
       setIsLoading(true)
       await addToInventory(
         product.id || "placeholder",
         `Recommended Product: ${product.name} by ${product.brand}\nCategory: ${product.category}\nDescription: ${product.description}\nKey Ingredients: ${product.key_ingredients?.join(", ") || ""}\nBenefits: ${product.benefits?.join(", ") || ""}`,
       )
-
-      // Show success message
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: `✓ Added ${product.name} by ${product.brand} to your collection with detailed information.`,
-          created_at: new Date().toISOString(),
-        },
-      ])
+      
+      // Update the message content to mark the product as added
+      let updatedMessageId: string | null = null
+      let updatedContent: string | null = null
+      
+      console.log(`🔄 Starting message update for product: ${product.name} by ${product.brand}`)
+      console.log(`📊 Total messages: ${messages.length}`)
+      
+      setMessages((prev) => {
+        console.log(`🔄 Updating messages for product: ${product.name}`)
+        let foundMessage = false
+        
+        const updatedMessages = prev.map((message) => {
+          console.log(`🔍 Checking message ${message.id}: role=${message.role}, hasProducts=${message.content.includes(`[PRODUCT]{`)}`)
+          
+          if (message.role === "assistant" && message.content.includes(`[PRODUCT]{`)) {
+            foundMessage = true
+            console.log(`📝 Found assistant message with products: ${message.id}`)
+            console.log(`🔍 Original content length: ${message.content.length}`)
+            console.log(`🔍 Original content preview:`, message.content.substring(0, 300) + '...')
+            
+            // Find and update the specific product in the message content
+            const productKey = `${product.name}-${product.brand}-${index}`
+            console.log(`🎯 Looking for product: ${productKey}`)
+            
+            // Create the regex pattern
+            const escapedName = product.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            const escapedBrand = product.brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            const regexPattern = `\\[PRODUCT\\]\\{[^}]*"name":"${escapedName}"[^}]*"brand":"${escapedBrand}"[^}]*\\}\\[\\/PRODUCT\\]`
+            
+            console.log(`🔍 Regex pattern: ${regexPattern}`)
+            
+            const regex = new RegExp(regexPattern)
+            const match = message.content.match(regex)
+            console.log(`🎯 Regex match found:`, !!match)
+            if (match) {
+              console.log(`🎯 Matched content:`, match[0])
+            }
+            
+            const newContent = message.content.replace(
+              regex,
+              `[PRODUCT]{${JSON.stringify({...product, added: true})}[/PRODUCT]`
+            )
+            
+            console.log(`✅ Updated content length: ${newContent.length}`)
+            console.log(`✅ Updated content preview:`, newContent.substring(0, 300) + '...')
+            console.log(`🔄 Content changed:`, newContent !== message.content)
+            
+            // Store the message ID and content for database update
+            updatedMessageId = message.id
+            updatedContent = newContent
+            
+            return { ...message, content: newContent }
+          }
+          return message
+        })
+        
+        console.log(`📊 Found message with products: ${foundMessage}`)
+        return updatedMessages
+      })
+      
+      // Update the message in the database
+      console.log(`💾 Database update check: updatedMessageId=${updatedMessageId}, updatedContent=${!!updatedContent}`)
+      
+      if (updatedMessageId && updatedContent) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            console.log(`💾 Updating database for message ${updatedMessageId}`)
+            console.log(`💾 New content length: ${updatedContent.length}`)
+            
+            const { error } = await supabase
+              .from("chat_history")
+              .update({ content: updatedContent })
+              .eq("id", updatedMessageId)
+              
+            if (error) {
+              console.error(`❌ Database update error:`, error)
+            } else {
+              console.log(`✅ Successfully updated message in database: ${updatedMessageId}`)
+            }
+          } else {
+            console.log(`❌ No user found for database update`)
+          }
+        } catch (error) {
+          console.error("❌ Error updating message in database:", error)
+        }
+      } else {
+        console.log(`❌ Cannot update database: missing messageId or content`)
+      }
+      
+      // Refresh inventory data to update button state
+      await refreshData()
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -340,15 +423,50 @@ function ChatConversationPageContent() {
         const result = await response.json()
 
         if (result.success) {
-          await refreshData()
-
-          const confirmMessage: ChatMessage = {
-            id: Date.now().toString(),
-            role: "assistant",
-            content: `✓ Added ${action.product_name} by ${action.product_brand} to your collection.`,
-            created_at: new Date().toISOString(),
+          // Update the message content to mark the product as added
+          let updatedMessageId: string | null = null
+          let updatedContent: string | null = null
+          
+          setMessages((prev) => {
+            return prev.map((message) => {
+              if (message.role === "assistant" && message.content.includes(`[CABINET_ACTION]`)) {
+                // Find and update the specific product in the message content
+                const escapedName = action.product_name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                const escapedBrand = action.product_brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                const regexPattern = `\\[CABINET_ACTION\\]\\{[^}]*"product_name":"${escapedName}"[^}]*"product_brand":"${escapedBrand}"[^}]*\\}`
+                
+                const regex = new RegExp(regexPattern)
+                const newContent = message.content.replace(
+                  regex,
+                  `[CABINET_ACTION]{${JSON.stringify({...action, added: true})}`
+                )
+                
+                // Store the message ID and content for database update
+                updatedMessageId = message.id
+                updatedContent = newContent
+                
+                return { ...message, content: newContent }
+              }
+              return message
+            })
+          })
+          
+          // Update the message in the database
+          if (updatedMessageId && updatedContent) {
+            try {
+              const { data: { user } } = await supabase.auth.getUser()
+              if (user) {
+                await supabase
+                  .from("chat_history")
+                  .update({ content: updatedContent })
+                  .eq("id", updatedMessageId)
+              }
+            } catch (error) {
+              console.error("Error updating message in database:", error)
+            }
           }
-          setMessages((prev) => [...prev, confirmMessage])
+          
+          await refreshData()
         } else {
           throw new Error(result.error || "Failed to add product")
         }
@@ -628,17 +746,35 @@ function ChatConversationPageContent() {
     fetchCheckins()
   }, [user?.id])
 
+  // Handle window resize for responsive layout
+  useEffect(() => {
+    const handleResize = () => {
+      setForceUpdate(prev => prev + 1)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   return (
     <div className="min-h-screen bg-stone-50 flex overflow-hidden pt-20">
 
       <div
-        className={`flex flex-col ${isResizing ? '' : 'transition-all duration-300'}`}
+        className={`flex flex-col ${activeTab ? 'flex-shrink-0' : 'flex-1'} ${isResizing ? '' : 'transition-all duration-300'}`}
         style={{
-          width: activeTab ? `calc(100vw - ${tabPanelWidth}px)` : "100%",
-          minWidth: activeTab ? "300px" : "0px",
+          width: activeTab ? `calc(100vw - ${tabPanelWidth}px - 2rem)` : "100%",
+          minWidth: activeTab ? "280px" : "0px",
+          maxWidth: activeTab ? `calc(100vw - ${tabPanelWidth}px - 2rem)` : "100%",
         }}
       >
-        <div className="fixed top-0 left-0 right-0 z-30 p-1 sm:p-2 md:p-4 lg:p-6">
+        <div 
+          className={`fixed top-0 z-30 p-1 sm:p-2 md:p-4 lg:p-6 ${isResizing ? '' : 'transition-all duration-300'}`}
+          style={{
+            left: "0",
+            right: activeTab ? `${tabPanelWidth}px` : "0",
+            width: activeTab ? `calc(100vw - ${tabPanelWidth}px)` : "100%",
+          }}
+        >
           <div className="w-full max-w-7xl mx-auto">
             {/* Header - Mobile and Desktop */}
             <div className="bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2 sm:py-3 md:py-4 shadow-lg border border-gray-200">
@@ -837,6 +973,7 @@ function ChatConversationPageContent() {
               onTreatmentSuggestion={handleTreatmentSuggestion}
               isLoading={isLoading}
               checkIns={checkIns}
+              inventory={inventory}
             />
           ))}
 
