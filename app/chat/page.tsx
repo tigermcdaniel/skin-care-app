@@ -127,7 +127,7 @@ export default function ChatPage() {
     <>
       <GlobalNavigation />
 
-      <div className="min-h-screen bg-stone-50">
+      <div className="min-h-screen bg-stone-50 pt-0">
         <div className="container mx-auto px-4 py-12 max-w-4xl">
           <div className="flex items-center justify-between mb-12">
             <div>

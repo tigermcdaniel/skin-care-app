@@ -19,7 +19,7 @@ export default function DemoPage() {
       <GlobalNavigation currentPage="demo" />
 
       {/* Hero Section */}
-      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6">
+      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 pt-0">
         <div className="max-w-4xl mx-auto text-center">
           <Badge className="mb-6 bg-blue-100 text-blue-800 border-blue-200">
             <Zap className="w-4 h-4 mr-2" />

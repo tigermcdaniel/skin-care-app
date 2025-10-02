@@ -629,7 +629,7 @@ function ChatConversationPageContent() {
   }, [user?.id])
 
   return (
-    <div className="min-h-screen bg-stone-50 flex overflow-hidden">
+    <div className="min-h-screen bg-stone-50 flex overflow-hidden pt-20">
 
       <div
         className={`flex flex-col ${isResizing ? '' : 'transition-all duration-300'}`}
@@ -638,10 +638,10 @@ function ChatConversationPageContent() {
           minWidth: activeTab ? "300px" : "0px",
         }}
       >
-        <div className="sticky top-0 z-30 p-1 sm:p-2 md:p-4 lg:p-6">
+        <div className="fixed top-0 left-0 right-0 z-30 p-1 sm:p-2 md:p-4 lg:p-6">
           <div className="w-full max-w-7xl mx-auto">
             {/* Header - Mobile and Desktop */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2 sm:py-3 md:py-4 shadow-lg border border-gray-200">
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2 sm:py-3 md:py-4 shadow-lg border border-gray-200">
               {/* Mobile Layout */}
               <div className="md:hidden">
                 {/* Top Row - Title, Mobile Menu Button, and Logout */}
@@ -810,7 +810,10 @@ function ChatConversationPageContent() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-6 space-y-3 sm:space-y-4 md:space-y-6 min-w-0">
+        {/* Gradient fade overlay - covers above and below menu bar */}
+        <div className="fixed top-0 left-0 right-0 h-32 bg-gradient-to-b from-stone-50 via-stone-50/80 to-transparent pointer-events-none z-20"></div>
+
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-6 space-y-3 sm:space-y-4 md:space-y-6 min-w-0 pt-20 relative">
           {messages.length === 0 && showActionTriggers && (
             <div className="space-y-4 sm:space-y-6 md:space-y-8">
               <div className="text-center px-2 sm:px-4">
