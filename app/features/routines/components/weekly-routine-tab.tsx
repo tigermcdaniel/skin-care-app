@@ -380,15 +380,15 @@ export function WeeklyRoutineTab() {
                           (step: any, index: number) => (
                             <div
                               key={step.id}
-                              className="flex items-center gap-3 p-3 bg-white rounded-lg border border-stone-200"
+                              className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-white rounded-lg border border-stone-200"
                             >
                               <span className="flex-shrink-0 w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center text-xs font-medium text-yellow-800">
                                 {index + 1}
                               </span>
-                              <div className="flex-1 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium text-charcoal-800">{step.products.name}</span>
-                                  <div className="flex items-center gap-2">
+                              <div className="flex-1 space-y-2 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                  <span className="text-sm font-medium text-charcoal-800 truncate">{step.products.name}</span>
+                                  <div className="flex items-center gap-2 min-w-0">
                                     {editMode[`${day.date}-morning`] ? (
                                       <Select
                                         value={step.product_id}
@@ -396,7 +396,7 @@ export function WeeklyRoutineTab() {
                                           updateStepProduct(`${day.date}-morning`, index, value)
                                         }
                                       >
-                                        <SelectTrigger className="w-48 h-8 text-xs">
+                                        <SelectTrigger className="w-full max-w-48 h-8 text-xs">
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -486,15 +486,15 @@ export function WeeklyRoutineTab() {
                           (step: any, index: number) => (
                             <div
                               key={step.id}
-                              className="flex items-center gap-3 p-3 bg-white rounded-lg border border-stone-200"
+                              className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-white rounded-lg border border-stone-200"
                             >
                               <span className="flex-shrink-0 w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-800">
                                 {index + 1}
                               </span>
-                              <div className="flex-1 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium text-charcoal-800">{step.products.name}</span>
-                                  <div className="flex items-center gap-2">
+                              <div className="flex-1 space-y-2 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                  <span className="text-sm font-medium text-charcoal-800 truncate">{step.products.name}</span>
+                                  <div className="flex items-center gap-2 min-w-0">
                                     {editMode[`${day.date}-evening`] ? (
                                       <Select
                                         value={step.product_id}
@@ -502,7 +502,7 @@ export function WeeklyRoutineTab() {
                                           updateStepProduct(`${day.date}-evening`, index, value)
                                         }
                                       >
-                                        <SelectTrigger className="w-48 h-8 text-xs">
+                                        <SelectTrigger className="w-full max-w-48 h-8 text-xs">
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>

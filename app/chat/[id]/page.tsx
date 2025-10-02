@@ -27,7 +27,7 @@ import { TreatmentsTab } from "@/app/features/treatments/components/treatments-t
 import { CheckInTab } from "@/app/features/check-in/components/check-in-tab"
 import { ChatMessageComponent } from "../components/chat-message"
 import { ChatInput } from "../components/chat-input"
-import { BookOpen, SquareChevronLeft as SquareChartGantt, Calendar, Stethoscope, ClipboardCheck, LogOut } from "lucide-react"
+import { BookOpen, SquareChevronLeft as SquareChartGantt, Calendar, Stethoscope, ClipboardCheck, LogOut, Menu, X } from "lucide-react"
 
 /**
  * ChatConversationPageContent Component
@@ -78,9 +78,11 @@ function ChatConversationPageContent() {
   const supabase = createClient()
 
   const [activeTab, setActiveTab] = useState<TabType | null>(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const [tabPanelWidth, setTabPanelWidth] = useState(384) // Default 384px (w-96)
   const [isResizing, setIsResizing] = useState(false)
+  const [forceUpdate, setForceUpdate] = useState(0) // Force re-render during resize
   const resizeRef = useRef<HTMLDivElement>(null)
 
   const {
@@ -493,6 +495,7 @@ function ChatConversationPageContent() {
 
   const handleSwitchTab = (tab: TabType) => {
     setActiveTab(tab)
+    setIsMobileMenuOpen(false) // Close mobile menu when tab is selected
   }
 
 
@@ -546,12 +549,14 @@ function ChatConversationPageContent() {
     const containerWidth = window.innerWidth
     const newWidth = containerWidth - e.clientX
 
-    // Constrain width between 300px and 60% of screen width
-    const minWidth = 300
-    const maxWidth = containerWidth * 0.6
+    // Constrain width between 250px and 80% of screen width for better flexibility
+    const minWidth = 250
+    const maxWidth = containerWidth * 0.8
     const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth))
 
+    console.log('Resizing sidebar to:', constrainedWidth, 'px')
     setTabPanelWidth(constrainedWidth)
+    setForceUpdate(prev => prev + 1) // Force re-render
   }
 
   const handleMouseUp = () => {
@@ -624,100 +629,193 @@ function ChatConversationPageContent() {
   }, [user?.id])
 
   return (
-    <div className="min-h-screen bg-stone-50 flex">
+    <div className="min-h-screen bg-stone-50 flex overflow-hidden">
 
       <div
-        className="flex-1 flex flex-col transition-all duration-300"
+        className={`flex flex-col ${isResizing ? '' : 'transition-all duration-300'}`}
         style={{
-          marginRight: activeTab ? `${tabPanelWidth}px` : "0px",
+          width: activeTab ? `calc(100vw - ${tabPanelWidth}px)` : "100%",
+          minWidth: activeTab ? "300px" : "0px",
         }}
       >
-        <div className="sticky top-0 z-30 p-4 sm:p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full px-4 sm:px-6 md:px-8 py-3 sm:py-4 shadow-lg border border-gray-200 flex items-center justify-between">
-              {/* Left Section - Title */}
-              <h1 className="text-lg sm:text-xl font-serif text-charcoal-900">Skincare Advisor</h1>
-              
-              {/* Center Section - Tab Navigation */}
-              <div className="flex items-center space-x-1 overflow-x-auto">
-            <button
-              onClick={() => handleSwitchTab("routines")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "routines"
-                  ? "bg-gray-100 text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
-              }`}
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>Routines</span>
-            </button>
-            <button
-              onClick={() => handleSwitchTab("collection")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "collection"
-                  ? "bg-gray-100 text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
-              }`}
-            >
-              <SquareChartGantt className="w-4 h-4" />
-              <span>Cabinet</span>
-            </button>
-            <button
-              onClick={() => handleSwitchTab("calendar")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "calendar"
-                  ? "bg-gray-100 text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
-              }`}
-            >
-              <Calendar className="w-4 h-4" />
-              <span>Calendar</span>
-            </button>
-            <button
-              onClick={() => handleSwitchTab("treatments")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "treatments"
-                  ? "bg-gray-100 text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
-              }`}
-            >
-              <Stethoscope className="w-4 h-4" />
-              <span>Treatments</span>
-            </button>
-            <button
-              onClick={() => handleSwitchTab("checkin")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "checkin"
-                  ? "bg-gray-100 text-black shadow-sm"
-                  : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
-              }`}
-            >
-              <ClipboardCheck className="w-4 h-4" />
-              <span>Check-in</span>
-            </button>
+        <div className="sticky top-0 z-30 p-1 sm:p-2 md:p-4 lg:p-6">
+          <div className="w-full max-w-7xl mx-auto">
+            {/* Header - Mobile and Desktop */}
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl sm:rounded-2xl px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2 sm:py-3 md:py-4 shadow-lg border border-gray-200">
+              {/* Mobile Layout */}
+              <div className="md:hidden">
+                {/* Top Row - Title, Mobile Menu Button, and Logout */}
+                <div className="flex items-center justify-between min-w-0">
+                  <h1 className="text-sm font-serif text-charcoal-900 truncate">Skincare Advisor</h1>
+                  
+                  <div className="flex items-center space-x-2">
+                    {/* Mobile Menu Button */}
+                    <button
+                      onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                      className="flex items-center justify-center w-8 h-8 text-stone-600 hover:text-charcoal-900 transition-colors"
+                      title="Menu"
+                    >
+                      {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </button>
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center space-x-0.5 px-1 py-1 text-xs text-stone-600 hover:text-red-600 transition-colors flex-shrink-0"
+                      title="Logout"
+                    >
+                      <LogOut className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
               </div>
-              
-              {/* Right Section - Controls */}
-              <div className="flex items-center space-x-4">
+
+              {/* Desktop Layout - Single Row */}
+              <div className="hidden md:flex items-center justify-between min-w-0">
+                {/* Left - Title */}
+                <h1 className="text-lg lg:text-xl font-serif text-charcoal-900 truncate">Skincare Advisor</h1>
+                
+                {/* Center - Tab Navigation */}
+                <div className="flex items-center space-x-1 overflow-x-auto scrollbar-hide min-w-0 flex-1 justify-center mx-4">
+                  <button
+                    onClick={() => handleSwitchTab("routines")}
+                    className={`flex items-center space-x-1 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                      activeTab === "routines"
+                        ? "bg-gray-100 text-black shadow-sm"
+                        : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <BookOpen className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">Routines</span>
+                  </button>
+                  <button
+                    onClick={() => handleSwitchTab("collection")}
+                    className={`flex items-center space-x-1 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                      activeTab === "collection"
+                        ? "bg-gray-100 text-black shadow-sm"
+                        : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <SquareChartGantt className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">Cabinet</span>
+                  </button>
+                  <button
+                    onClick={() => handleSwitchTab("calendar")}
+                    className={`flex items-center space-x-1 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                      activeTab === "calendar"
+                        ? "bg-gray-100 text-black shadow-sm"
+                        : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Calendar className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">Calendar</span>
+                  </button>
+                  <button
+                    onClick={() => handleSwitchTab("treatments")}
+                    className={`flex items-center space-x-1 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                      activeTab === "treatments"
+                        ? "bg-gray-100 text-black shadow-sm"
+                        : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Stethoscope className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">Treatments</span>
+                  </button>
+                  <button
+                    onClick={() => handleSwitchTab("checkin")}
+                    className={`flex items-center space-x-1 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                      activeTab === "checkin"
+                        ? "bg-gray-100 text-black shadow-sm"
+                        : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <ClipboardCheck className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">Check-in</span>
+                  </button>
+                </div>
+                
+                {/* Right - Logout */}
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 px-3 py-2 text-sm text-stone-600 hover:text-red-600 transition-colors"
+                  className="flex items-center space-x-1 px-2 py-1.5 text-sm text-stone-600 hover:text-red-600 transition-colors flex-shrink-0"
                   title="Logout"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Logout</span>
                 </button>
               </div>
+              
+              {/* Mobile Menu Dropdown */}
+              {isMobileMenuOpen && (
+                <div className="md:hidden mt-3 pt-3 border-t border-gray-200">
+                  <div className="grid grid-cols-1 gap-1">
+                    <button
+                      onClick={() => handleSwitchTab("routines")}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === "routines"
+                          ? "bg-gray-100 text-black shadow-sm"
+                          : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                      }`}
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      <span>Routines</span>
+                    </button>
+                    <button
+                      onClick={() => handleSwitchTab("collection")}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === "collection"
+                          ? "bg-gray-100 text-black shadow-sm"
+                          : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                      }`}
+                    >
+                      <SquareChartGantt className="w-4 h-4" />
+                      <span>Cabinet</span>
+                    </button>
+                    <button
+                      onClick={() => handleSwitchTab("calendar")}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === "calendar"
+                          ? "bg-gray-100 text-black shadow-sm"
+                          : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                      }`}
+                    >
+                      <Calendar className="w-4 h-4" />
+                      <span>Calendar</span>
+                    </button>
+                    <button
+                      onClick={() => handleSwitchTab("treatments")}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === "treatments"
+                          ? "bg-gray-100 text-black shadow-sm"
+                          : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                      }`}
+                    >
+                      <Stethoscope className="w-4 h-4" />
+                      <span>Treatments</span>
+                    </button>
+                    <button
+                      onClick={() => handleSwitchTab("checkin")}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        activeTab === "checkin"
+                          ? "bg-gray-100 text-black shadow-sm"
+                          : "text-stone-600 hover:text-charcoal-900 hover:bg-gray-50"
+                      }`}
+                    >
+                      <ClipboardCheck className="w-4 h-4" />
+                      <span>Check-in</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-6 space-y-3 sm:space-y-4 md:space-y-6 min-w-0">
           {messages.length === 0 && showActionTriggers && (
-            <div className="space-y-8">
-              <div className="text-center">
-                <h2 className="text-2xl font-serif text-charcoal-900 mb-4">How can I help you today?</h2>
-                <p className="text-stone-600 mb-8">Ask me anything about skincare, routines, or products.</p>
+            <div className="space-y-4 sm:space-y-6 md:space-y-8">
+              <div className="text-center px-2 sm:px-4">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-serif text-charcoal-900 mb-2 sm:mb-3 md:mb-4">How can I help you today?</h2>
+                <p className="text-xs sm:text-sm md:text-base text-stone-600 mb-4 sm:mb-6 md:mb-8">Ask me anything about skincare, routines, or products.</p>
               </div>
             </div>
           )}
@@ -741,15 +839,15 @@ function ChatConversationPageContent() {
 
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-stone-100 text-charcoal-900 border border-stone-200 p-4 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-sage-600 rounded-full animate-bounce"></div>
+              <div className="bg-stone-100 text-charcoal-900 border border-stone-200 p-3 sm:p-4 rounded-lg">
+                <div className="flex items-center space-x-1.5 sm:space-x-2">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-sage-600 rounded-full animate-bounce"></div>
                   <div
-                    className="w-2 h-2 bg-sage-600 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-sage-600 rounded-full animate-bounce"
                     style={{ animationDelay: "0.1s" }}
                   ></div>
                   <div
-                    className="w-2 h-2 bg-sage-600 rounded-full animate-bounce"
+                    className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-sage-600 rounded-full animate-bounce"
                     style={{ animationDelay: "0.2s" }}
                   ></div>
                 </div>
@@ -776,10 +874,11 @@ function ChatConversationPageContent() {
         />
       </div>
 
+      {/* Desktop Resize Handle */}
       {activeTab && (
         <div
           ref={resizeRef}
-          className="fixed top-0 w-1 h-full bg-stone-300 hover:bg-sage-400 cursor-col-resize z-40 transition-colors"
+          className="hidden md:block fixed top-0 w-1 h-full bg-stone-300 hover:bg-sage-400 cursor-col-resize z-40 transition-colors"
           style={{ right: `${tabPanelWidth}px` }}
           onMouseDown={handleMouseDown}
         >
@@ -787,14 +886,39 @@ function ChatConversationPageContent() {
         </div>
       )}
 
+      {/* Mobile Overlay */}
+      {activeTab && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setActiveTab(null)}
+        />
+      )}
+
+      {/* Sidebar Panel */}
       {activeTab && (
         <div
-          className="fixed right-0 top-0 h-full bg-white border-l border-stone-200 shadow-lg z-50"
+          className="fixed right-0 top-0 h-full bg-white border-l border-stone-200 shadow-lg z-50 md:border-l-0 md:shadow-none"
           style={{
             width: `${tabPanelWidth}px`,
+            minWidth: "250px",
+            maxWidth: "80vw",
           }}
         >
-          <div className="p-4 border-b border-stone-200">
+          {/* Mobile Header */}
+          <div className="md:hidden p-4 border-b border-stone-200 bg-white">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-serif text-charcoal-900 capitalize">{activeTab}</h2>
+              <button
+                onClick={() => setActiveTab(null)}
+                className="text-stone-500 hover:text-charcoal-900 transition-colors p-2"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden md:block p-4 border-b border-stone-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-serif text-charcoal-900 capitalize">{activeTab}</h2>
               <div className="flex items-center space-x-2">
@@ -807,6 +931,7 @@ function ChatConversationPageContent() {
               </div>
             </div>
           </div>
+
           <div className="h-full overflow-y-auto p-4">
             {activeTab === "routines" && (
               <WeeklyRoutineTab />

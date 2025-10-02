@@ -73,22 +73,22 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
   const dayNames = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
   return (
-    <Card className="border-gray-200 bg-gray-50">
+    <Card className="border-gray-200 bg-gray-50 w-full max-w-full overflow-hidden">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg font-serif text-charcoal-900 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-black" />
-              {suggestion.title}
+        <div className="flex items-start justify-between min-w-0">
+          <div className="space-y-1 flex-1 min-w-0">
+            <CardTitle className="text-base sm:text-lg font-serif text-charcoal-900 flex items-center gap-2 truncate">
+              <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-black flex-shrink-0" />
+              <span className="truncate">{suggestion.title}</span>
             </CardTitle>
-            <p className="text-sm text-charcoal-600">{suggestion.description}</p>
+            <p className="text-xs sm:text-sm text-charcoal-600 line-clamp-2">{suggestion.description}</p>
             <Badge className="bg-gray-100 text-gray-800 border-gray-200 text-xs">Weekly Routine Suggestion</Badge>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-charcoal-600 hover:bg-gray-100"
+            className="text-charcoal-600 hover:bg-gray-100 flex-shrink-0 ml-2"
           >
             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
@@ -112,18 +112,18 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
                 if (!daySchedule) return null
 
                 return (
-                  <div key={day} className="p-3 bg-white rounded-lg border border-stone-200">
+                  <div key={day} className="p-3 bg-white rounded-lg border border-stone-200 w-full overflow-hidden">
                     <h5 className="text-sm font-medium text-charcoal-800 mb-2">{day}</h5>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Morning */}
-                      <div className="space-y-2">
+                      <div className="space-y-2 min-w-0">
                         <div className="flex items-center gap-2">
-                          <Sun className="h-3 w-3 text-black" />
+                          <Sun className="h-3 w-3 text-black flex-shrink-0" />
                           <span className="text-xs font-medium text-charcoal-700">Morning</span>
                         </div>
                         <div className="space-y-1">
                           {daySchedule.morning.steps.slice(0, 3).map((step, index) => (
-                            <div key={index} className="text-xs text-charcoal-600">
+                            <div key={index} className="text-xs text-charcoal-600 truncate">
                               {index + 1}. {step.product_name} - {step.product_brand}
                             </div>
                           ))}
@@ -136,14 +136,14 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
                       </div>
 
                       {/* Evening */}
-                      <div className="space-y-2">
+                      <div className="space-y-2 min-w-0">
                         <div className="flex items-center gap-2">
-                          <Moon className="h-3 w-3 text-black" />
+                          <Moon className="h-3 w-3 text-black flex-shrink-0" />
                           <span className="text-xs font-medium text-charcoal-700">Evening</span>
                         </div>
                         <div className="space-y-1">
                           {daySchedule.evening.steps.slice(0, 3).map((step, index) => (
-                            <div key={index} className="text-xs text-charcoal-600">
+                            <div key={index} className="text-xs text-charcoal-600 truncate">
                               {index + 1}. {step.product_name} - {step.product_brand}
                             </div>
                           ))}
@@ -164,23 +164,23 @@ export function RoutineApprovalCard({ suggestion, onApprove, onDeny }: RoutineAp
 
         {/* Action Buttons */}
         {!isApproved && !isDenied && (
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-2">
             <Button
               onClick={handleApprove}
               disabled={isProcessing}
-              className="flex-1 bg-blue-200 hover:bg-blue-300 text-blue-800"
+              className="flex-1 bg-blue-200 hover:bg-blue-300 text-blue-800 text-sm sm:text-base"
             >
               <Check className="h-4 w-4 mr-2" />
-              {isProcessing ? "Approving..." : "Approve & Apply"}
+              <span className="truncate">{isProcessing ? "Approving..." : "Approve & Apply"}</span>
             </Button>
             <Button
               onClick={handleDeny}
               disabled={isProcessing}
               variant="outline"
-              className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent"
+              className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent text-sm sm:text-base"
             >
               <X className="h-4 w-4 mr-2" />
-              {isProcessing ? "Denying..." : "Deny"}
+              <span className="truncate">{isProcessing ? "Denying..." : "Deny"}</span>
             </Button>
           </div>
         )}

@@ -142,19 +142,6 @@ export function TreatmentsTab({}: TreatmentsTabProps) {
               <div className="text-center py-8 text-stone-500">
                 <Calendar className="w-8 h-8 mx-auto mb-2 text-stone-400" />
                 <p className="text-sm">No upcoming appointments</p>
-                <button
-                  onClick={() => {
-                    if (window.parent) {
-                      window.parent.postMessage(
-                        { type: "CHAT_COMMAND", command: "Schedule a treatment appointment" },
-                        "*",
-                      )
-                    }
-                  }}
-                  className="mt-2 text-xs text-blue-600 hover:text-blue-700 underline"
-                >
-                  Ask chat to schedule one
-                </button>
               </div>
             ) : (
               upcomingAppointments.slice(0, 3).map((appointment) => (

@@ -341,9 +341,6 @@ export function ChatMessageComponent({
 
     return (
       <div className="flex space-x-3">
-        <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-          <Bot className="w-4 h-4 text-muted-foreground" />
-        </div>
         <div className="flex-1 space-y-3">
           <div className="bg-white rounded-lg p-4 shadow-sm border border-border">
             <div className="prose prose-sm max-w-none">
