@@ -11,11 +11,12 @@ import { Github } from "lucide-react"
 
 interface GlobalNavigationProps {
   currentPage?: "home" | "demo"
+  showBackground?: boolean
 }
 
-export function GlobalNavigation({ currentPage }: GlobalNavigationProps) {
+export function GlobalNavigation({ currentPage, showBackground = true }: GlobalNavigationProps) {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-4">
+    <header className={`fixed top-0 left-0 right-0 z-50 px-4 py-4 ${showBackground ? 'bg-white/95 backdrop-blur-sm border-b border-gray-200' : ''}`}>
       <div className="max-w-7xl mx-auto">
         {/* Mobile Navigation - Simple top bar */}
         <div className="block lg:hidden">

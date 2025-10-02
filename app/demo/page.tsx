@@ -16,7 +16,7 @@ export default function DemoPage() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Global Navigation */}
-      <GlobalNavigation currentPage="demo" />
+      <GlobalNavigation currentPage="demo" showBackground={false} />
 
       {/* Hero Section */}
       <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 pt-0">

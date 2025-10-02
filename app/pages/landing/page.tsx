@@ -63,7 +63,7 @@ export default async function LandingPage() {
         {/* Hero Content Overlay */}
         <div className="relative z-10 h-full flex flex-col pt-0">
         {/* Header */}
-        <GlobalNavigation currentPage="home" />
+        <GlobalNavigation currentPage="home" showBackground={false} />
 
         {/* Main Content */}
         <main className="flex-1 flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 md:py-16">
