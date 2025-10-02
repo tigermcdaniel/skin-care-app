@@ -45,7 +45,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { RoutineBuilder } from "@/app/features/routines/routine-builder"
+import { RoutineBuilder } from "@/app/features/routines/components/routine-builder"
 import { createClient } from "@/integrations/supabase/client"
 import { useRouter } from "next/navigation"
 import { Plus, Edit, Sun, Moon, Calendar, Clock, MessageCircle, CheckCircle, Play } from "lucide-react"

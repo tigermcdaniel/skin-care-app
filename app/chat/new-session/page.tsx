@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/integrations/supabase/client"
+import { generateUUID } from "@/lib/uuid"
 
 export default function NewChatSessionPage() {
   const router = useRouter()
@@ -19,8 +20,8 @@ export default function NewChatSessionPage() {
 
         if (userError && userError.message === "Supabase not configured") {
           console.log("[v0] Supabase not configured, proceeding without auth")
-          // Generate a session ID and proceed without authentication
-          const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+          // Generate a session ID and proceed without authentication (client-side only)
+          const sessionId = `session-${generateUUID()}`
           const prompt = searchParams.get("prompt")
 
           if (prompt) {
@@ -36,8 +37,8 @@ export default function NewChatSessionPage() {
           return
         }
 
-        // Generate a new session ID
-        const sessionId = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        // Generate a new session ID (client-side only)
+        const sessionId = `session-${generateUUID()}`
 
         // Get the initial prompt if provided
         const prompt = searchParams.get("prompt")

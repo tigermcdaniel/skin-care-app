@@ -2,12 +2,14 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { generateUUID } from "@/lib/uuid"
 
 export default function NewChatPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const chatId = Date.now().toString()
+    // Generate ID only on client side to avoid hydration mismatch
+    const chatId = generateUUID()
     router.replace(`/chat/${chatId}`)
   }, [router])
 

@@ -17,40 +17,17 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useParams, useSearchParams, useRouter } from "next/navigation"
 import { createClient } from "@/integrations/supabase/client"
-import {
-  Calendar,
-  SquareChevronLeft as SquareChartGantt,
-  BookOpen,
-  Stethoscope,
-  LogOut,
-  ClipboardCheck,
-} from "lucide-react"
 import { useSkincareData, SkincareDataProvider } from "@/app/features/shared/contexts/skincare-data-context"
-import { WeeklyRoutineTab } from "@/app/features/routines/weekly-routine-tab"
-import { InventoryManagerTab } from "@/app/features/inventory/inventory-manager-tab"
-import { SkincareCalendar } from "@/app/features/calendar/skincare-calendar"
-import { TreatmentsTab } from "@/app/features/treatments/treatments-tab"
-import { CheckInTab } from "@/app/features/check-in/check-in-tab"
+import { ChatActionHandlers } from "../lib/chat-action-handlers"
+import { ChatMessage, TabType, QUICK_COMMANDS } from "../types/chat"
+import { WeeklyRoutineTab } from "@/app/features/routines/components/weekly-routine-tab"
+import { InventoryManagerTab } from "@/app/features/inventory/components/inventory-manager-tab"
+import { SkincareCalendar } from "@/app/features/calendar/pages/skincare-calendar"
+import { TreatmentsTab } from "@/app/features/treatments/components/treatments-tab"
+import { CheckInTab } from "@/app/features/check-in/components/check-in-tab"
 import { ChatMessageComponent } from "../components/chat-message"
 import { ChatInput } from "../components/chat-input"
-import { ChatActionHandlers } from "../lib/chat-action-handlers"
-
-interface ChatMessage {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  created_at: string
-}
-
-type TabType = "routines" | "collection" | "calendar" | "treatments" | "checkin" | null
-
-const QUICK_COMMANDS = [
-  "What's my morning routine?",
-  "Help me build a routine.",
-  "What is in my cabinet?",
-  "Do i have any upcoming appointments?",
-  "Let's add a product to my cabinet.",
-]
+import { BookOpen, SquareChevronLeft as SquareChartGantt, Calendar, Stethoscope, ClipboardCheck, LogOut } from "lucide-react"
 
 /**
  * ChatConversationPageContent Component
@@ -453,8 +430,10 @@ function ChatConversationPageContent() {
 
       const messageData = {
         user_id: user.id,
-        message_type: role,
-        ...(role === "user" ? { message: content, response: null } : { message: null, response: content }),
+        session_id: params.id as string,
+        role: role,
+        content: content,
+        message_type: 'general'
       }
 
       await supabase.from("chat_history").insert(messageData)
@@ -484,8 +463,8 @@ function ChatConversationPageContent() {
       if (data) {
         const mappedMessages = data.map((msg: any) => ({
           id: msg.id.toString(),
-          role: msg.message_type as "user" | "assistant",
-          content: msg.message_type === "user" ? msg.message || "" : msg.response || "",
+          role: msg.role as "user" | "assistant",
+          content: msg.content || "",
           created_at: msg.created_at,
         }))
 
@@ -820,10 +799,7 @@ function ChatConversationPageContent() {
               <h2 className="text-lg font-serif text-charcoal-900 capitalize">{activeTab}</h2>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => {
-                    setActiveTab(null)
-                    setIsFullScreen(false)
-                  }}
+                  onClick={() => setActiveTab(null)}
                   className="text-stone-500 hover:text-charcoal-900 transition-colors"
                 >
                   ✕

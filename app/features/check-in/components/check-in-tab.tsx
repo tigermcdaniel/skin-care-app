@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { DailyCheckIn } from "./daily-check-in"
+import { DailyCheckIn } from "../pages/daily-check-in"
 import { useSkincareData } from "@/app/features/shared/contexts/skincare-data-context"
 import { Expand, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"

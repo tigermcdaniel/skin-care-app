@@ -1,6 +1,6 @@
 "use client"
 import { Bot, CheckCircle, Stethoscope, ClipboardCheck, Minus, Plus, Calendar, Camera, Check } from "lucide-react"
-import { RoutineApprovalCard } from "@/app/features/routines/routine-approval-card"
+import { RoutineApprovalCard } from "@/app/features/routines/components/routine-approval-card"
 import { useState } from "react"
 
 import { generateUUID } from "@/lib/uuid"

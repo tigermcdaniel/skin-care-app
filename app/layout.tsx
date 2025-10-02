@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${geist.variable} ${playfair.variable} antialiased`}>
+    <html lang="en" className={`${geist.variable} ${playfair.variable} antialiased`} suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans text-foreground">{children}</body>
     </html>
   )
@@ -28,10 +28,11 @@ export default function RootLayout({
 
 export const metadata = {
   generator: 'v0.app',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
